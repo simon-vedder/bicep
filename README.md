@@ -16,7 +16,7 @@ bicep/
 
 ```
 
-##🚀 How to Use
+## 🚀 How to Use
 
 Deploy a Bicep template using the Azure CLI:
 ```
