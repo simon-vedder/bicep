@@ -7,6 +7,9 @@ param namePrefix string
 @description('Principal ID of the AIB UAMI — granted Storage Blob Data Reader.')
 param aibIdentityPrincipalId string
 
+@description('GitHub raw base URL to download scripts from during deployment. Example: https://raw.githubusercontent.com/org/repo/branch/path/scripts')
+param scriptSourceBaseUrl string
+
 param tags object = {}
 
 // Storage account name: 3-24 chars, lowercase alphanumeric only
@@ -39,7 +42,8 @@ resource scriptsContainer 'Microsoft.Storage/storageAccounts/blobServices/contai
   }
 }
 
-// AIB UAMI needs read access to pull scripts during build
+// ── AIB UAMI — Storage Blob Data Reader (pull scripts during image build) ─────
+
 var storageBlobDataReaderRoleId = '2a2b9908-6ea1-4ae2-8e65-a410df84e7d1'
 
 resource aibStorageRa 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
@@ -50,6 +54,72 @@ resource aibStorageRa 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
     principalId: aibIdentityPrincipalId
     principalType: 'ServicePrincipal'
   }
+}
+
+// ── Deployment script UAMI — Storage Blob Data Contributor (upload scripts) ──
+
+resource dsIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
+  name: 'uami-${namePrefix}-ds'
+  location: location
+  tags: tags
+}
+
+var storageBlobDataContributorRoleId = 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
+
+resource dsStorageRa 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(storageAccount.id, dsIdentity.id, storageBlobDataContributorRoleId)
+  scope: storageAccount
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', storageBlobDataContributorRoleId)
+    principalId: dsIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+// ── Deployment script — downloads scripts from GitHub, uploads to blob ────────
+// Runs once at deploy time inside a temporary ACI container (~2 min, ~€0.01).
+// Re-runs automatically if scriptSourceBaseUrl changes (forceUpdateTag drives this).
+
+resource uploadScripts 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
+  name: 'ds-${namePrefix}-upload-scripts'
+  location: location
+  tags: tags
+  kind: 'AzureCLI'
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${dsIdentity.id}': {}
+    }
+  }
+  properties: {
+    azCliVersion: '2.52.0'
+    retentionInterval: 'PT1H'
+    timeout: 'PT10M'
+    forceUpdateTag: scriptSourceBaseUrl  // re-runs when source URL changes
+    environmentVariables: [
+      { name: 'STORAGE_ACCOUNT', value: storageAccount.name }
+      { name: 'SCRIPT_BASE_URL', value: scriptSourceBaseUrl }
+    ]
+    scriptContent: '''
+      #!/bin/bash
+      set -e
+      SCRIPTS=("windows-updates.ps1" "install-agents.ps1" "avd-optimizations.ps1" "security-hardening.ps1")
+      for script in "${SCRIPTS[@]}"; do
+        echo "Downloading ${script}..."
+        curl -sLf "${SCRIPT_BASE_URL}/${script}" -o "/tmp/${script}" || { echo "Failed to download ${script}"; exit 1; }
+        echo "Uploading ${script}..."
+        az storage blob upload \
+          --account-name "${STORAGE_ACCOUNT}" \
+          --container-name "scripts" \
+          --name "${script}" \
+          --file "/tmp/${script}" \
+          --auth-mode login \
+          --overwrite true
+      done
+      echo "All scripts uploaded successfully."
+    '''
+  }
+  dependsOn: [scriptsContainer, dsStorageRa]
 }
 
 output storageAccountId string = storageAccount.id

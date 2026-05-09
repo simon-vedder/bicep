@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.43.8.12551",
-      "templateHash": "12043654168281803829"
+      "templateHash": "12352043086735792812"
     }
   },
   "parameters": {
@@ -1078,6 +1078,9 @@
           "aibIdentityPrincipalId": {
             "value": "[reference(resourceId('Microsoft.Resources/deployments', 'identity'), '2025-04-01').outputs.aibIdentityPrincipalId.value]"
           },
+          "scriptSourceBaseUrl": {
+            "value": "[parameters('scriptBaseUrl')]"
+          },
           "tags": {
             "value": "[parameters('tags')]"
           }
@@ -1089,7 +1092,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.43.8.12551",
-              "templateHash": "14944242962225645816"
+              "templateHash": "2493393925123756522"
             }
           },
           "parameters": {
@@ -1111,6 +1114,12 @@
                 "description": "Principal ID of the AIB UAMI — granted Storage Blob Data Reader."
               }
             },
+            "scriptSourceBaseUrl": {
+              "type": "string",
+              "metadata": {
+                "description": "GitHub raw base URL to download scripts from during deployment. Example: https://raw.githubusercontent.com/org/repo/branch/path/scripts"
+              }
+            },
             "tags": {
               "type": "object",
               "defaultValue": {}
@@ -1118,7 +1127,8 @@
           },
           "variables": {
             "storageAccountName": "[toLower(take(format('stgib{0}', replace(replace(parameters('namePrefix'), '-', ''), '_', '')), 24))]",
-            "storageBlobDataReaderRoleId": "2a2b9908-6ea1-4ae2-8e65-a410df84e7d1"
+            "storageBlobDataReaderRoleId": "2a2b9908-6ea1-4ae2-8e65-a410df84e7d1",
+            "storageBlobDataContributorRoleId": "ba92f5b4-2d11-453d-a403-e96b0029c9fe"
           },
           "resources": [
             {
@@ -1167,6 +1177,65 @@
                 "principalType": "ServicePrincipal"
               },
               "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+              "apiVersion": "2023-01-31",
+              "name": "[format('uami-{0}-ds', parameters('namePrefix'))]",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]"
+            },
+            {
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "scope": "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
+              "name": "[guid(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('uami-{0}-ds', parameters('namePrefix'))), variables('storageBlobDataContributorRoleId'))]",
+              "properties": {
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('storageBlobDataContributorRoleId'))]",
+                "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('uami-{0}-ds', parameters('namePrefix'))), '2023-01-31').principalId]",
+                "principalType": "ServicePrincipal"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('uami-{0}-ds', parameters('namePrefix')))]",
+                "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Resources/deploymentScripts",
+              "apiVersion": "2023-08-01",
+              "name": "[format('ds-{0}-upload-scripts', parameters('namePrefix'))]",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "kind": "AzureCLI",
+              "identity": {
+                "type": "UserAssigned",
+                "userAssignedIdentities": {
+                  "[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('uami-{0}-ds', parameters('namePrefix'))))]": {}
+                }
+              },
+              "properties": {
+                "azCliVersion": "2.52.0",
+                "retentionInterval": "PT1H",
+                "timeout": "PT10M",
+                "forceUpdateTag": "[parameters('scriptSourceBaseUrl')]",
+                "environmentVariables": [
+                  {
+                    "name": "STORAGE_ACCOUNT",
+                    "value": "[variables('storageAccountName')]"
+                  },
+                  {
+                    "name": "SCRIPT_BASE_URL",
+                    "value": "[parameters('scriptSourceBaseUrl')]"
+                  }
+                ],
+                "scriptContent": "      #!/bin/bash\n      set -e\n      SCRIPTS=(\"windows-updates.ps1\" \"install-agents.ps1\" \"avd-optimizations.ps1\" \"security-hardening.ps1\")\n      for script in \"${SCRIPTS[@]}\"; do\n        echo \"Downloading ${script}...\"\n        curl -sLf \"${SCRIPT_BASE_URL}/${script}\" -o \"/tmp/${script}\" || { echo \"Failed to download ${script}\"; exit 1; }\n        echo \"Uploading ${script}...\"\n        az storage blob upload \\\n          --account-name \"${STORAGE_ACCOUNT}\" \\\n          --container-name \"scripts\" \\\n          --name \"${script}\" \\\n          --file \"/tmp/${script}\" \\\n          --auth-mode login \\\n          --overwrite true\n      done\n      echo \"All scripts uploaded successfully.\"\n    "
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('uami-{0}-ds', parameters('namePrefix')))]",
+                "[extensionResourceId(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), 'Microsoft.Authorization/roleAssignments', guid(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('uami-{0}-ds', parameters('namePrefix'))), variables('storageBlobDataContributorRoleId')))]",
+                "[resourceId('Microsoft.Storage/storageAccounts/blobServices/containers', variables('storageAccountName'), 'default', 'scripts')]",
                 "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
               ]
             }

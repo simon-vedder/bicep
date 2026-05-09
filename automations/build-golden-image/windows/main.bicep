@@ -229,6 +229,7 @@ module storage '../shared/modules/storage.bicep' = if (usePrivateScriptStorage) 
     location: location
     namePrefix: namePrefix
     aibIdentityPrincipalId: identity.outputs.aibIdentityPrincipalId
+    scriptSourceBaseUrl: scriptBaseUrl  // always the GitHub raw URL — deployment script downloads from here
     tags: tags
   }
 }
