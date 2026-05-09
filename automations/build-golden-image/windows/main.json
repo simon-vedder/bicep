@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.43.8.12551",
-      "templateHash": "5786676414727274639"
+      "templateHash": "15762178247410974177"
     }
   },
   "parameters": {
@@ -204,7 +204,7 @@
       }
     ],
     "enabledImageConfigs": "[filter(variables('imageConfigs'), lambda('config', lambdaVariables('config').enabled))]",
-    "storageAccountName": "[toLower(take(replace(replace(format('st{0}gib', parameters('namePrefix')), '-', ''), '_', ''), 24))]",
+    "storageAccountName": "[toLower(take(format('stgib{0}', replace(replace(parameters('namePrefix'), '-', ''), '_', '')), 24))]",
     "resolvedScriptBaseUrl": "[if(parameters('usePrivateScriptStorage'), format('https://{0}.blob.{1}/scripts', variables('storageAccountName'), environment().suffixes.storage), parameters('scriptBaseUrl'))]"
   },
   "resources": [

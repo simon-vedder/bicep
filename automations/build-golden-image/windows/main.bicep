@@ -167,7 +167,7 @@ var imageConfigs = [
 var enabledImageConfigs = filter(imageConfigs, config => config.enabled)
 
 // Derive private script URL from naming convention — avoids conditional module output reference
-var storageAccountName = toLower(take(replace(replace('st${namePrefix}gib', '-', ''), '_', ''), 24))
+var storageAccountName = toLower(take('stgib${replace(replace(namePrefix, '-', ''), '_', '')}', 24))
 var resolvedScriptBaseUrl = usePrivateScriptStorage
   ? 'https://${storageAccountName}.blob.${environment().suffixes.storage}/scripts'
   : scriptBaseUrl
