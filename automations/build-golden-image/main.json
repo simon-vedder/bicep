@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.43.8.12551",
-      "templateHash": "12993149434244577829"
+      "templateHash": "2514225693483136079"
     }
   },
   "parameters": {
@@ -256,7 +256,7 @@
         "name": "ubuntu2404",
         "publisher": "Canonical",
         "offer": "ubuntu-24_04-lts",
-        "sku": "server-gen2"
+        "sku": "server"
       },
       {
         "enabled": "[parameters('enableRhel8')]",
