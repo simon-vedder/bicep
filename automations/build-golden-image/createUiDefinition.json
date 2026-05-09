@@ -22,19 +22,23 @@
       {
         "name": "osSelection",
         "label": "Image Selection",
-        "subLabel": {
-          "preValidation": "Select OS images to build",
-          "postValidation": "Done"
-        },
-        "bladeTitle": "Image Selection",
         "elements": [
           {
-            "name": "windowsInfo",
+            "name": "osInfo",
             "type": "Microsoft.Common.InfoBox",
             "visible": true,
             "options": {
-              "text": "Windows images",
+              "text": "Select which OS images to build. Each enabled image deploys one Azure Image Builder template and builds on the configured monthly schedule.",
               "style": "Info"
+            }
+          },
+          {
+            "name": "windowsInfo",
+            "type": "Microsoft.Common.TextBlock",
+            "visible": true,
+            "options": {
+              "text": "Windows",
+              "style": "Heading"
             }
           },
           {
@@ -67,11 +71,11 @@
           },
           {
             "name": "linuxInfo",
-            "type": "Microsoft.Common.InfoBox",
+            "type": "Microsoft.Common.TextBlock",
             "visible": true,
             "options": {
-              "text": "Linux images",
-              "style": "Info"
+              "text": "Linux",
+              "style": "Heading"
             }
           },
           {
@@ -107,11 +111,6 @@
       {
         "name": "customization",
         "label": "Customization",
-        "subLabel": {
-          "preValidation": "Configure agents and hardening",
-          "postValidation": "Done"
-        },
-        "bladeTitle": "Customization",
         "elements": [
           {
             "name": "installAzureMonitorAgent",
@@ -146,16 +145,11 @@
       {
         "name": "scheduleNotifications",
         "label": "Schedule & Notifications",
-        "subLabel": {
-          "preValidation": "Configure build schedule",
-          "postValidation": "Done"
-        },
-        "bladeTitle": "Schedule & Notifications",
         "elements": [
           {
             "name": "buildScheduleDayOfMonth",
             "type": "Microsoft.Common.Slider",
-            "label": "Day of month",
+            "label": "Day of month for scheduled build",
             "toolTip": "Day of month to run the scheduled build. Default 15 = ~3 days after Patch Tuesday.",
             "min": 1,
             "max": 28,
@@ -165,7 +159,7 @@
           {
             "name": "buildScheduleHour",
             "type": "Microsoft.Common.Slider",
-            "label": "Hour (UTC)",
+            "label": "Hour (UTC) for scheduled build",
             "toolTip": "Hour (UTC) to start the build. Default 2 = 02:00 UTC.",
             "min": 0,
             "max": 23,
@@ -196,11 +190,6 @@
       {
         "name": "networking",
         "label": "Networking",
-        "subLabel": {
-          "preValidation": "Configure networking options",
-          "postValidation": "Done"
-        },
-        "bladeTitle": "Networking",
         "elements": [
           {
             "name": "useVNetInjection",
@@ -210,23 +199,31 @@
             "defaultValue": false
           },
           {
-            "name": "vnetConfig",
-            "type": "Microsoft.Network.VirtualNetworkCombo",
-            "label": {
-              "virtualNetwork": "Virtual network",
-              "subnets": "Subnet"
-            },
-            "toolTip": {
-              "virtualNetwork": "VNet where the AIB build VM will run.",
-              "subnets": "Subnet for the AIB build VM. Must not have an NSG blocking AIB service tags."
-            },
+            "name": "vnetResourceGroupName",
+            "type": "Microsoft.Common.TextBox",
+            "label": "VNet resource group name",
+            "toolTip": "Resource group containing the VNet.",
+            "defaultValue": "",
             "visible": "[steps('networking').useVNetInjection]",
-            "subnets": {
-              "buildSubnet": {
-                "label": "Build subnet",
-                "constraints": { "minAddressPrefixSize": "/28" }
-              }
-            }
+            "constraints": { "required": false }
+          },
+          {
+            "name": "vnetName",
+            "type": "Microsoft.Common.TextBox",
+            "label": "VNet name",
+            "toolTip": "Name of the virtual network.",
+            "defaultValue": "",
+            "visible": "[steps('networking').useVNetInjection]",
+            "constraints": { "required": false }
+          },
+          {
+            "name": "subnetName",
+            "type": "Microsoft.Common.TextBox",
+            "label": "Subnet name",
+            "toolTip": "Name of the subnet for the AIB build VM. Must not have an NSG blocking AIB service tags.",
+            "defaultValue": "",
+            "visible": "[steps('networking').useVNetInjection]",
+            "constraints": { "required": false }
           },
           {
             "name": "usePrivateScriptStorage",
@@ -258,9 +255,9 @@
       "notificationEmail": "[steps('scheduleNotifications').notificationEmail]",
       "enableLogAnalytics": "[steps('scheduleNotifications').enableLogAnalytics]",
       "useVNetInjection": "[steps('networking').useVNetInjection]",
-      "vnetResourceGroupName": "[if(steps('networking').useVNetInjection, last(take(split(steps('networking').vnetConfig.id, '/'), 5)), '')]",
-      "vnetName": "[if(steps('networking').useVNetInjection, steps('networking').vnetConfig.name, '')]",
-      "subnetName": "[if(steps('networking').useVNetInjection, steps('networking').vnetConfig.subnets.buildSubnet.name, '')]",
+      "vnetResourceGroupName": "[steps('networking').vnetResourceGroupName]",
+      "vnetName": "[steps('networking').vnetName]",
+      "subnetName": "[steps('networking').subnetName]",
       "usePrivateScriptStorage": "[steps('networking').usePrivateScriptStorage]"
     }
   }
