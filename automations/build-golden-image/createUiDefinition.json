@@ -1,0 +1,283 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/0.1.2-preview/CreateUIDefinition.MultiVm.json#",
+  "handler": "Microsoft.Azure.CreateUIDef",
+  "version": "0.1.2-preview",
+  "parameters": {
+    "config": {
+      "isWizard": true,
+      "basics": {
+        "resourceGroup": { "allowExisting": true },
+        "location": { "visible": true }
+      }
+    },
+    "basics": [
+      {
+        "name": "namePrefix",
+        "type": "Microsoft.Common.TextBox",
+        "label": "Name prefix",
+        "toolTip": "3-15 chars, lowercase, hyphens allowed. Drives all resource names. Example: gib-contoso-prod",
+        "constraints": {
+          "required": true,
+          "regex": "^[a-z][a-z0-9-]{1,13}[a-z0-9]$",
+          "validationMessage": "3-15 chars, lowercase alphanumeric and hyphens, must start and end with alphanumeric."
+        }
+      }
+    ],
+    "steps": [
+      {
+        "name": "osSelection",
+        "label": "Image Selection",
+        "elements": [
+          {
+            "name": "windowsSection",
+            "type": "Microsoft.Common.Section",
+            "label": "Windows",
+            "elements": [
+              {
+                "name": "enableWindowsServer2022",
+                "type": "Microsoft.Common.CheckBox",
+                "label": "Windows Server 2022",
+                "toolTip": "Datacenter Azure Edition (Gen2). IaaS VM workloads.",
+                "defaultValue": true
+              },
+              {
+                "name": "enableWindowsServer2025",
+                "type": "Microsoft.Common.CheckBox",
+                "label": "Windows Server 2025",
+                "toolTip": "Datacenter Azure Edition (Gen2). IaaS VM workloads.",
+                "defaultValue": true
+              },
+              {
+                "name": "enableWindows11MultiSession",
+                "type": "Microsoft.Common.CheckBox",
+                "label": "Windows 11 Multi-Session",
+                "toolTip": "Win11 24H2 AVD edition — pooled AVD session hosts.",
+                "defaultValue": true
+              },
+              {
+                "name": "enableWindows11SingleSession",
+                "type": "Microsoft.Common.CheckBox",
+                "label": "Windows 11 Single-Session",
+                "toolTip": "Win11 24H2 Enterprise — AVD personal hosts or standard VMs.",
+                "defaultValue": false
+              }
+            ]
+          },
+          {
+            "name": "linuxSection",
+            "type": "Microsoft.Common.Section",
+            "label": "Linux",
+            "elements": [
+              {
+                "name": "enableUbuntu2204",
+                "type": "Microsoft.Common.CheckBox",
+                "label": "Ubuntu 22.04 LTS",
+                "toolTip": "Canonical Ubuntu Server Jammy Jellyfish (Gen2).",
+                "defaultValue": false
+              },
+              {
+                "name": "enableUbuntu2404",
+                "type": "Microsoft.Common.CheckBox",
+                "label": "Ubuntu 24.04 LTS",
+                "toolTip": "Canonical Ubuntu Server Noble Numbat (Gen2).",
+                "defaultValue": false
+              },
+              {
+                "name": "enableRhel8",
+                "type": "Microsoft.Common.CheckBox",
+                "label": "RHEL 8",
+                "toolTip": "Red Hat Enterprise Linux 8 PAYG (Gen2). RHEL license cost included.",
+                "defaultValue": false
+              },
+              {
+                "name": "enableRhel9",
+                "type": "Microsoft.Common.CheckBox",
+                "label": "RHEL 9",
+                "toolTip": "Red Hat Enterprise Linux 9 PAYG (Gen2). RHEL license cost included.",
+                "defaultValue": false
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "customization",
+        "label": "Customization",
+        "elements": [
+          {
+            "name": "agentsSection",
+            "type": "Microsoft.Common.Section",
+            "label": "Agents",
+            "elements": [
+              {
+                "name": "installAzureMonitorAgent",
+                "type": "Microsoft.Common.CheckBox",
+                "label": "Install Azure Monitor Agent",
+                "toolTip": "Pre-installs AMA. Data collection rules must be assigned post-deployment.",
+                "defaultValue": true
+              },
+              {
+                "name": "installDefenderForEndpoint",
+                "type": "Microsoft.Common.CheckBox",
+                "label": "Install Microsoft Defender for Endpoint",
+                "toolTip": "Pre-installs MDE binary. Onboarding package must be applied post-deployment via Defender portal or Intune.",
+                "defaultValue": true
+              }
+            ]
+          },
+          {
+            "name": "hardeningSection",
+            "type": "Microsoft.Common.Section",
+            "label": "Security",
+            "elements": [
+              {
+                "name": "enableSecurityHardening",
+                "type": "Microsoft.Common.CheckBox",
+                "label": "Enable CIS-aligned security hardening",
+                "toolTip": "Windows: registry, TLS, SMBv1, firewall. Linux: sysctl, SSH restrictions, firewall, legacy service removal.",
+                "defaultValue": false
+              }
+            ]
+          },
+          {
+            "name": "avdSection",
+            "type": "Microsoft.Common.Section",
+            "label": "AVD (Windows 11 only)",
+            "elements": [
+              {
+                "name": "enableAvdOptimizations",
+                "type": "Microsoft.Common.CheckBox",
+                "label": "Enable AVD optimizations",
+                "toolTip": "Installs FSLogix, configures Teams AVD mode, applies OS tuning. Applied only to Windows 11 images.",
+                "defaultValue": true
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "scheduleNotifications",
+        "label": "Schedule & Notifications",
+        "elements": [
+          {
+            "name": "scheduleSection",
+            "type": "Microsoft.Common.Section",
+            "label": "Build schedule",
+            "elements": [
+              {
+                "name": "buildScheduleDayOfMonth",
+                "type": "Microsoft.Common.Slider",
+                "label": "Day of month",
+                "toolTip": "Day of month to run the scheduled build. Default 15 = ~3 days after Patch Tuesday.",
+                "min": 1,
+                "max": 28,
+                "defaultValue": 15,
+                "showStepMarkers": false
+              },
+              {
+                "name": "buildScheduleHour",
+                "type": "Microsoft.Common.Slider",
+                "label": "Hour (UTC)",
+                "toolTip": "Hour (UTC) to start the build. Default 2 = 02:00 UTC.",
+                "min": 0,
+                "max": 23,
+                "defaultValue": 2,
+                "showStepMarkers": false
+              }
+            ]
+          },
+          {
+            "name": "monitoringSection",
+            "type": "Microsoft.Common.Section",
+            "label": "Monitoring & notifications",
+            "elements": [
+              {
+                "name": "notificationEmail",
+                "type": "Microsoft.Common.TextBox",
+                "label": "Notification email",
+                "toolTip": "Email address for build success/failure alerts. Leave empty to disable.",
+                "defaultValue": "",
+                "constraints": {
+                  "required": false,
+                  "regex": "^$|^[^@]+@[^@]+\\.[^@]+$",
+                  "validationMessage": "Enter a valid email address or leave empty."
+                }
+              },
+              {
+                "name": "enableLogAnalytics",
+                "type": "Microsoft.Common.CheckBox",
+                "label": "Deploy Log Analytics workspace",
+                "toolTip": "Deploys a Log Analytics workspace for centralized build log aggregation.",
+                "defaultValue": false
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "networking",
+        "label": "Networking",
+        "elements": [
+          {
+            "name": "useVNetInjection",
+            "type": "Microsoft.Common.CheckBox",
+            "label": "Enable VNet injection",
+            "toolTip": "Injects the AIB build VM into a customer VNet. Required for private script storage or strict outbound rules.",
+            "defaultValue": false
+          },
+          {
+            "name": "vnetConfig",
+            "type": "Microsoft.Network.VirtualNetworkCombo",
+            "label": {
+              "virtualNetwork": "Virtual network",
+              "subnets": "Subnet"
+            },
+            "toolTip": {
+              "virtualNetwork": "VNet where the AIB build VM will run.",
+              "subnets": "Subnet for the AIB build VM. Must not have an NSG blocking AIB service tags."
+            },
+            "visible": "[steps('networking').useVNetInjection]",
+            "subnets": {
+              "buildSubnet": {
+                "label": "Build subnet",
+                "constraints": { "minAddressPrefixSize": "/28" }
+              }
+            }
+          },
+          {
+            "name": "usePrivateScriptStorage",
+            "type": "Microsoft.Common.CheckBox",
+            "label": "Use private script storage",
+            "toolTip": "Deploys a private Azure Blob container and uploads scripts during deployment. Required if GitHub is not reachable from the build environment.",
+            "defaultValue": false
+          }
+        ]
+      }
+    ],
+    "outputs": {
+      "namePrefix": "[basics('namePrefix')]",
+      "location": "[location()]",
+      "enableWindowsServer2022": "[steps('osSelection').windowsSection.enableWindowsServer2022]",
+      "enableWindowsServer2025": "[steps('osSelection').windowsSection.enableWindowsServer2025]",
+      "enableWindows11MultiSession": "[steps('osSelection').windowsSection.enableWindows11MultiSession]",
+      "enableWindows11SingleSession": "[steps('osSelection').windowsSection.enableWindows11SingleSession]",
+      "enableUbuntu2204": "[steps('osSelection').linuxSection.enableUbuntu2204]",
+      "enableUbuntu2404": "[steps('osSelection').linuxSection.enableUbuntu2404]",
+      "enableRhel8": "[steps('osSelection').linuxSection.enableRhel8]",
+      "enableRhel9": "[steps('osSelection').linuxSection.enableRhel9]",
+      "installAzureMonitorAgent": "[steps('customization').agentsSection.installAzureMonitorAgent]",
+      "installDefenderForEndpoint": "[steps('customization').agentsSection.installDefenderForEndpoint]",
+      "enableSecurityHardening": "[steps('customization').hardeningSection.enableSecurityHardening]",
+      "enableAvdOptimizations": "[steps('customization').avdSection.enableAvdOptimizations]",
+      "buildScheduleDayOfMonth": "[steps('scheduleNotifications').scheduleSection.buildScheduleDayOfMonth]",
+      "buildScheduleHour": "[steps('scheduleNotifications').scheduleSection.buildScheduleHour]",
+      "notificationEmail": "[steps('scheduleNotifications').monitoringSection.notificationEmail]",
+      "enableLogAnalytics": "[steps('scheduleNotifications').monitoringSection.enableLogAnalytics]",
+      "useVNetInjection": "[steps('networking').useVNetInjection]",
+      "vnetResourceGroupName": "[if(steps('networking').useVNetInjection, last(take(split(steps('networking').vnetConfig.id, '/'), 5)), '')]",
+      "vnetName": "[if(steps('networking').useVNetInjection, steps('networking').vnetConfig.name, '')]",
+      "subnetName": "[if(steps('networking').useVNetInjection, steps('networking').vnetConfig.subnets.buildSubnet.name, '')]",
+      "usePrivateScriptStorage": "[steps('networking').usePrivateScriptStorage]"
+    }
+  }
+}

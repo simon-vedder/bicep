@@ -13,6 +13,12 @@ param scriptSourceBaseUrl string
 @description('List of script file names to download from source and upload to blob storage.')
 param scriptFileNames array = ['windows-updates.ps1', 'install-agents.ps1', 'avd-optimizations.ps1', 'security-hardening.ps1']
 
+@description('Optional second base URL for scripts from a different OS path (e.g. Linux scripts in a combined deployment).')
+param secondaryScriptSourceBaseUrl string = ''
+
+@description('Script file names to download from the secondary base URL.')
+param secondaryScriptFileNames array = []
+
 param tags object = {}
 
 // Storage account name: 3-24 chars, lowercase alphanumeric only
@@ -98,19 +104,21 @@ resource uploadScripts 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
     azCliVersion: '2.52.0'
     retentionInterval: 'PT1H'
     timeout: 'PT10M'
-    forceUpdateTag: scriptSourceBaseUrl  // re-runs when source URL changes
+    forceUpdateTag: '${scriptSourceBaseUrl}|${secondaryScriptSourceBaseUrl}'
     environmentVariables: [
       { name: 'STORAGE_ACCOUNT', value: storageAccount.name }
       { name: 'SCRIPT_BASE_URL', value: scriptSourceBaseUrl }
       { name: 'SCRIPT_FILE_NAMES', value: join(scriptFileNames, ' ') }
+      { name: 'SECONDARY_SCRIPT_BASE_URL', value: secondaryScriptSourceBaseUrl }
+      { name: 'SECONDARY_SCRIPT_FILE_NAMES', value: join(secondaryScriptFileNames, ' ') }
     ]
     scriptContent: '''
       #!/bin/bash
       set -e
-      IFS=' ' read -ra SCRIPTS <<< "$SCRIPT_FILE_NAMES"
-      for script in "${SCRIPTS[@]}"; do
+      upload_script() {
+        local base_url="$1" script="$2"
         echo "Downloading ${script}..."
-        curl -sLf "${SCRIPT_BASE_URL}/${script}" -o "/tmp/${script}" || { echo "Failed to download ${script}"; exit 1; }
+        curl -sLf "${base_url}/${script}" -o "/tmp/${script}" || { echo "Failed to download ${script}"; exit 1; }
         echo "Uploading ${script}..."
         az storage blob upload \
           --account-name "${STORAGE_ACCOUNT}" \
@@ -119,7 +127,13 @@ resource uploadScripts 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
           --file "/tmp/${script}" \
           --auth-mode login \
           --overwrite true
-      done
+      }
+      IFS=' ' read -ra SCRIPTS <<< "$SCRIPT_FILE_NAMES"
+      for script in "${SCRIPTS[@]}"; do upload_script "$SCRIPT_BASE_URL" "$script"; done
+      if [ -n "${SECONDARY_SCRIPT_BASE_URL}" ]; then
+        IFS=' ' read -ra SEC_SCRIPTS <<< "$SECONDARY_SCRIPT_FILE_NAMES"
+        for script in "${SEC_SCRIPTS[@]}"; do upload_script "$SECONDARY_SCRIPT_BASE_URL" "$script"; done
+      fi
       echo "All scripts uploaded successfully."
     '''
   }
