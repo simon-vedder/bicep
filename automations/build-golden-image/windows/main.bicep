@@ -198,7 +198,7 @@ module imageTemplates 'modules/imageTemplate.bicep' = [for config in enabledImag
     replicationRegions: additionalReplicationRegions
     tags: tags
   }
-  dependsOn: [aibContributorRa]
+  dependsOn: [aibContributorRa, storage]
 }]
 
 var enabledTemplateNames = [for config in enabledImageConfigs: 'aib-${namePrefix}-${config.name}']
