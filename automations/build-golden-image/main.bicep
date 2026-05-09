@@ -194,7 +194,7 @@ var linuxImageConfigs = [
     name: 'ubuntu2404'
     publisher: 'Canonical'
     offer: 'ubuntu-24_04-lts'
-    sku: 'server-gen2'
+    sku: 'server'
   }
   {
     enabled: enableRhel8

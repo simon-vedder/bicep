@@ -98,7 +98,7 @@ graph TD
 | Parameter | OS | Marketplace SKU | Use case |
 |---|---|---|---|
 | `enableUbuntu2204` | Ubuntu 22.04 LTS | `22_04-lts-gen2` | IaaS VM workloads |
-| `enableUbuntu2404` | Ubuntu 24.04 LTS | `server-gen2` | IaaS VM workloads |
+| `enableUbuntu2404` | Ubuntu 24.04 LTS | `server` | IaaS VM workloads |
 | `enableRhel8` | RHEL 8 (PAYG) | `8-lvm-gen2` | IaaS VM workloads — RHEL license cost included |
 | `enableRhel9` | RHEL 9 (PAYG) | `9-lvm-gen2` | IaaS VM workloads — RHEL license cost included |
 
