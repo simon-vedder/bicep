@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.43.8.12551",
-      "templateHash": "9021667127436567171"
+      "templateHash": "6264898871474526413"
     }
   },
   "parameters": {
@@ -31,32 +31,32 @@
         "managedBy": "bicep"
       }
     },
-    "enableWindowsServer2022": {
+    "enableUbuntu2204": {
       "type": "bool",
       "defaultValue": true,
       "metadata": {
-        "description": "Build and maintain a Windows Server 2022 golden image."
+        "description": "Build and maintain an Ubuntu 22.04 LTS golden image."
       }
     },
-    "enableWindowsServer2025": {
+    "enableUbuntu2404": {
       "type": "bool",
       "defaultValue": true,
       "metadata": {
-        "description": "Build and maintain a Windows Server 2025 golden image."
+        "description": "Build and maintain an Ubuntu 24.04 LTS golden image."
       }
     },
-    "enableWindows11MultiSession": {
+    "enableRhel8": {
       "type": "bool",
-      "defaultValue": true,
+      "defaultValue": false,
       "metadata": {
-        "description": "Build and maintain a Windows 11 Multi-Session golden image (AVD pooled hosts)."
+        "description": "Build and maintain a RHEL 8 golden image."
       }
     },
-    "enableWindows11SingleSession": {
+    "enableRhel9": {
       "type": "bool",
       "defaultValue": true,
       "metadata": {
-        "description": "Build and maintain a Windows 11 Single-Session golden image (AVD personal / standard VMs)."
+        "description": "Build and maintain a RHEL 9 golden image."
       }
     },
     "installAzureMonitorAgent": {
@@ -70,28 +70,21 @@
       "type": "bool",
       "defaultValue": true,
       "metadata": {
-        "description": "Install Microsoft Defender for Endpoint prerequisites during image build."
+        "description": "Install Microsoft Defender for Endpoint during image build."
       }
     },
     "enableSecurityHardening": {
       "type": "bool",
       "defaultValue": false,
       "metadata": {
-        "description": "Apply CIS-aligned security hardening (registry, services, firewall)."
-      }
-    },
-    "enableAvdOptimizations": {
-      "type": "bool",
-      "defaultValue": true,
-      "metadata": {
-        "description": "Apply AVD-specific optimizations (FSLogix, Teams, OS tweaks). Applied to Win11 images only."
+        "description": "Apply CIS-aligned security hardening."
       }
     },
     "scriptBaseUrl": {
       "type": "string",
-      "defaultValue": "https://raw.githubusercontent.com/simon-vedder/bicep/add/goldenimagebuilder/automations/build-golden-image/windows/scripts",
+      "defaultValue": "https://raw.githubusercontent.com/simon-vedder/bicep/add/goldenimagebuilder/automations/build-golden-image/linux/scripts",
       "metadata": {
-        "description": "Base URL for PowerShell customization scripts. Change only if using a fork or private storage."
+        "description": "Base URL for shell customization scripts. Change only if using a fork or private storage."
       }
     },
     "usePrivateScriptStorage": {
@@ -123,7 +116,7 @@
       "type": "bool",
       "defaultValue": false,
       "metadata": {
-        "description": "Inject the AIB build VM into a customer VNet (required for private script storage or strict outbound rules)."
+        "description": "Inject the AIB build VM into a customer VNet."
       }
     },
     "vnetResourceGroupName": {
@@ -171,41 +164,43 @@
     "contributorRoleId": "b24988ac-6180-42a0-ab88-20f7382dd24c",
     "imageConfigs": [
       {
-        "enabled": "[parameters('enableWindowsServer2022')]",
-        "name": "ws2022",
-        "publisher": "MicrosoftWindowsServer",
-        "offer": "WindowsServer",
-        "sku": "2022-datacenter-azure-edition",
-        "isAvd": false
+        "enabled": "[parameters('enableUbuntu2204')]",
+        "name": "ubuntu2204",
+        "publisher": "Canonical",
+        "offer": "0001-com-ubuntu-server-jammy",
+        "sku": "22_04-lts-gen2"
       },
       {
-        "enabled": "[parameters('enableWindowsServer2025')]",
-        "name": "ws2025",
-        "publisher": "MicrosoftWindowsServer",
-        "offer": "WindowsServer",
-        "sku": "2025-datacenter-azure-edition",
-        "isAvd": false
+        "enabled": "[parameters('enableUbuntu2404')]",
+        "name": "ubuntu2404",
+        "publisher": "Canonical",
+        "offer": "ubuntu-24_04-lts",
+        "sku": "server-gen2"
       },
       {
-        "enabled": "[parameters('enableWindows11MultiSession')]",
-        "name": "win11-ms",
-        "publisher": "MicrosoftWindowsDesktop",
-        "offer": "windows-11",
-        "sku": "win11-24h2-avd",
-        "isAvd": true
+        "enabled": "[parameters('enableRhel8')]",
+        "name": "rhel8",
+        "publisher": "RedHat",
+        "offer": "RHEL",
+        "sku": "8-lvm-gen2"
       },
       {
-        "enabled": "[parameters('enableWindows11SingleSession')]",
-        "name": "win11-ss",
-        "publisher": "MicrosoftWindowsDesktop",
-        "offer": "windows-11",
-        "sku": "win11-24h2-ent",
-        "isAvd": true
+        "enabled": "[parameters('enableRhel9')]",
+        "name": "rhel9",
+        "publisher": "RedHat",
+        "offer": "RHEL",
+        "sku": "9-lvm-gen2"
       }
     ],
     "enabledImageConfigs": "[filter(variables('imageConfigs'), lambda('config', lambdaVariables('config').enabled))]",
     "storageAccountName": "[toLower(take(format('stgib{0}', replace(replace(parameters('namePrefix'), '-', ''), '_', '')), 24))]",
-    "resolvedScriptBaseUrl": "[if(parameters('usePrivateScriptStorage'), format('https://{0}.blob.{1}/scripts', variables('storageAccountName'), environment().suffixes.storage), parameters('scriptBaseUrl'))]"
+    "resolvedScriptBaseUrl": "[if(parameters('usePrivateScriptStorage'), format('https://{0}.blob.{1}/scripts', variables('storageAccountName'), environment().suffixes.storage), parameters('scriptBaseUrl'))]",
+    "linuxScriptFileNames": [
+      "linux-updates.sh",
+      "install-ama.sh",
+      "install-mde.sh",
+      "security-hardening.sh"
+    ]
   },
   "resources": [
     {
@@ -347,16 +342,28 @@
             "value": "[parameters('tags')]"
           },
           "enableWindowsServer2022": {
-            "value": "[parameters('enableWindowsServer2022')]"
+            "value": false
           },
           "enableWindowsServer2025": {
-            "value": "[parameters('enableWindowsServer2025')]"
+            "value": false
           },
           "enableWindows11MultiSession": {
-            "value": "[parameters('enableWindows11MultiSession')]"
+            "value": false
           },
           "enableWindows11SingleSession": {
-            "value": "[parameters('enableWindows11SingleSession')]"
+            "value": false
+          },
+          "enableUbuntu2204": {
+            "value": "[parameters('enableUbuntu2204')]"
+          },
+          "enableUbuntu2404": {
+            "value": "[parameters('enableUbuntu2404')]"
+          },
+          "enableRhel8": {
+            "value": "[parameters('enableRhel8')]"
+          },
+          "enableRhel9": {
+            "value": "[parameters('enableRhel9')]"
           }
         },
         "template": {
@@ -727,9 +734,6 @@
           "imageSku": {
             "value": "[variables('enabledImageConfigs')[copyIndex()].sku]"
           },
-          "isAvd": {
-            "value": "[variables('enabledImageConfigs')[copyIndex()].isAvd]"
-          },
           "aibIdentityId": {
             "value": "[reference(resourceId('Microsoft.Resources/deployments', 'identity'), '2025-04-01').outputs.aibIdentityId.value]"
           },
@@ -747,9 +751,6 @@
           },
           "enableSecurityHardening": {
             "value": "[parameters('enableSecurityHardening')]"
-          },
-          "enableAvdOptimizations": {
-            "value": "[and(parameters('enableAvdOptimizations'), variables('enabledImageConfigs')[copyIndex()].isAvd)]"
           },
           "useVNetInjection": {
             "value": "[parameters('useVNetInjection')]"
@@ -777,7 +778,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.43.8.12551",
-              "templateHash": "1595505465306882528"
+              "templateHash": "15699978315299855180"
             }
           },
           "parameters": {
@@ -796,7 +797,7 @@
             "imageName": {
               "type": "string",
               "metadata": {
-                "description": "Short OS identifier: ws2022 | ws2025 | win11-ms | win11-ss"
+                "description": "Short OS identifier — used in resource names."
               }
             },
             "imagePublisher": {
@@ -807,17 +808,6 @@
             },
             "imageSku": {
               "type": "string"
-            },
-            "imageVersion": {
-              "type": "string",
-              "defaultValue": "latest"
-            },
-            "isAvd": {
-              "type": "bool",
-              "defaultValue": false,
-              "metadata": {
-                "description": "True for Windows 10/11 images — enables AVD-specific customization path."
-              }
             },
             "aibIdentityId": {
               "type": "string",
@@ -834,7 +824,7 @@
             "scriptBaseUrl": {
               "type": "string",
               "metadata": {
-                "description": "Base URL for PowerShell scripts (raw GitHub path or blob container URL)."
+                "description": "Base URL for shell customization scripts."
               }
             },
             "installAzureMonitorAgent": {
@@ -846,10 +836,6 @@
               "defaultValue": true
             },
             "enableSecurityHardening": {
-              "type": "bool",
-              "defaultValue": false
-            },
-            "enableAvdOptimizations": {
               "type": "bool",
               "defaultValue": false
             },
@@ -871,10 +857,7 @@
             },
             "replicationRegions": {
               "type": "array",
-              "defaultValue": [],
-              "metadata": {
-                "description": "Additional replication regions beyond the deployment region."
-              }
+              "defaultValue": []
             },
             "tags": {
               "type": "object",
@@ -882,47 +865,38 @@
             }
           },
           "variables": {
-            "templateName": "[format('aib-{0}-{1}', parameters('namePrefix'), parameters('imageName'))]",
             "imageDefinitionName": "[format('imgdef-{0}-{1}', parameters('namePrefix'), parameters('imageName'))]",
-            "updatesSteps": [
+            "baseCustomizers": [
               {
-                "type": "PowerShell",
-                "name": "WindowsUpdates",
-                "scriptUri": "[format('{0}/windows-updates.ps1', parameters('scriptBaseUrl'))]",
-                "runElevated": true,
-                "runAsSystem": true
-              },
-              {
-                "type": "WindowsRestart",
-                "restartCommand": "shutdown /r /f /t 0",
-                "restartCheckCommand": "echo Restart complete",
-                "restartTimeout": "10m"
+                "type": "Shell",
+                "name": "LinuxUpdates",
+                "scriptUri": "[format('{0}/linux-updates.sh', parameters('scriptBaseUrl'))]"
               }
             ],
-            "agentSteps": "[if(or(parameters('installAzureMonitorAgent'), parameters('installDefenderForEndpoint')), createArray(createObject('type', 'PowerShell', 'name', 'InstallAgents', 'scriptUri', format('{0}/install-agents.ps1', parameters('scriptBaseUrl')), 'runElevated', true(), 'runAsSystem', true(), 'validExitCodes', createArray(0, 3010))), createArray())]",
-            "securitySteps": "[if(parameters('enableSecurityHardening'), createArray(createObject('type', 'PowerShell', 'name', 'SecurityHardening', 'scriptUri', format('{0}/security-hardening.ps1', parameters('scriptBaseUrl')), 'runElevated', true(), 'runAsSystem', true())), createArray())]",
-            "avdSteps": "[if(and(parameters('isAvd'), parameters('enableAvdOptimizations')), createArray(createObject('type', 'PowerShell', 'name', 'AvdOptimizations', 'scriptUri', format('{0}/avd-optimizations.ps1', parameters('scriptBaseUrl')), 'runElevated', true(), 'runAsSystem', true())), createArray())]",
-            "finalRestartStep": [
+            "amaCustomizers": "[if(parameters('installAzureMonitorAgent'), createArray(createObject('type', 'Shell', 'name', 'InstallAMA', 'scriptUri', format('{0}/install-ama.sh', parameters('scriptBaseUrl')))), createArray())]",
+            "mdeCustomizers": "[if(parameters('installDefenderForEndpoint'), createArray(createObject('type', 'Shell', 'name', 'InstallMDE', 'scriptUri', format('{0}/install-mde.sh', parameters('scriptBaseUrl')))), createArray())]",
+            "hardeningCustomizers": "[if(parameters('enableSecurityHardening'), createArray(createObject('type', 'Shell', 'name', 'SecurityHardening', 'scriptUri', format('{0}/security-hardening.sh', parameters('scriptBaseUrl')))), createArray())]",
+            "allCustomizers": "[concat(variables('baseCustomizers'), variables('amaCustomizers'), variables('mdeCustomizers'), variables('hardeningCustomizers'))]",
+            "distributeBase": [
               {
-                "type": "WindowsRestart",
-                "restartCommand": "shutdown /r /f /t 0",
-                "restartCheckCommand": "echo Final restart complete",
-                "restartTimeout": "5m"
+                "type": "SharedImage",
+                "galleryImageId": "[resourceId('Microsoft.Compute/galleries/images', parameters('galleryName'), variables('imageDefinitionName'))]",
+                "runOutputName": "[format('run-{0}', parameters('imageName'))]",
+                "replicationRegions": "[concat(createArray(parameters('location')), parameters('replicationRegions'))]",
+                "storageAccountType": "Standard_LRS"
               }
             ],
-            "allCustomizations": "[concat(variables('updatesSteps'), variables('agentSteps'), variables('securitySteps'), variables('avdSteps'), variables('finalRestartStep'))]",
             "vmProfileBase": {
               "vmSize": "Standard_D4s_v3",
-              "osDiskSizeGB": 128
+              "osDiskSizeGB": 86
             },
-            "vmProfile": "[if(parameters('useVNetInjection'), union(variables('vmProfileBase'), createObject('vnetConfig', createObject('subnetId', resourceId(parameters('vnetResourceGroupName'), 'Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('subnetName'))))), variables('vmProfileBase'))]",
-            "allRegions": "[union(createArray(parameters('location')), parameters('replicationRegions'))]"
+            "vnetConfig": "[if(parameters('useVNetInjection'), createObject('vnetConfig', createObject('subnetId', resourceId(parameters('vnetResourceGroupName'), 'Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('subnetName')))), createObject())]"
           },
           "resources": [
             {
               "type": "Microsoft.VirtualMachineImages/imageTemplates",
               "apiVersion": "2024-02-01",
-              "name": "[variables('templateName')]",
+              "name": "[format('aib-{0}-{1}', parameters('namePrefix'), parameters('imageName'))]",
               "location": "[parameters('location')]",
               "tags": "[parameters('tags')]",
               "identity": {
@@ -933,40 +907,27 @@
               },
               "properties": {
                 "buildTimeoutInMinutes": 120,
-                "vmProfile": "[variables('vmProfile')]",
                 "source": {
                   "type": "PlatformImage",
                   "publisher": "[parameters('imagePublisher')]",
                   "offer": "[parameters('imageOffer')]",
                   "sku": "[parameters('imageSku')]",
-                  "version": "[parameters('imageVersion')]"
+                  "version": "latest"
                 },
-                "customize": "[variables('allCustomizations')]",
-                "distribute": [
-                  {
-                    "type": "SharedImage",
-                    "galleryImageId": "[resourceId('Microsoft.Compute/galleries/images', parameters('galleryName'), variables('imageDefinitionName'))]",
-                    "runOutputName": "[format('{0}-output', variables('templateName'))]",
-                    "replicationRegions": "[variables('allRegions')]",
-                    "storageAccountType": "Standard_LRS",
-                    "excludeFromLatest": false
-                  }
-                ],
-                "errorHandling": {
-                  "onCustomizerError": "cleanup",
-                  "onValidationError": "cleanup"
-                }
+                "customize": "[variables('allCustomizers')]",
+                "distribute": "[variables('distributeBase')]",
+                "vmProfile": "[union(variables('vmProfileBase'), variables('vnetConfig'))]"
               }
             }
           ],
           "outputs": {
             "imageTemplateId": {
               "type": "string",
-              "value": "[resourceId('Microsoft.VirtualMachineImages/imageTemplates', variables('templateName'))]"
+              "value": "[resourceId('Microsoft.VirtualMachineImages/imageTemplates', format('aib-{0}-{1}', parameters('namePrefix'), parameters('imageName')))]"
             },
             "imageTemplateName": {
               "type": "string",
-              "value": "[variables('templateName')]"
+              "value": "[format('aib-{0}-{1}', parameters('namePrefix'), parameters('imageName'))]"
             }
           }
         }
@@ -1221,6 +1182,9 @@
           },
           "scriptSourceBaseUrl": {
             "value": "[parameters('scriptBaseUrl')]"
+          },
+          "scriptFileNames": {
+            "value": "[variables('linuxScriptFileNames')]"
           },
           "tags": {
             "value": "[parameters('tags')]"

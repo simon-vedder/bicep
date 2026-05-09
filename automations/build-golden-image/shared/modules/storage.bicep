@@ -10,6 +10,9 @@ param aibIdentityPrincipalId string
 @description('GitHub raw base URL to download scripts from during deployment. Example: https://raw.githubusercontent.com/org/repo/branch/path/scripts')
 param scriptSourceBaseUrl string
 
+@description('List of script file names to download from source and upload to blob storage.')
+param scriptFileNames array = ['windows-updates.ps1', 'install-agents.ps1', 'avd-optimizations.ps1', 'security-hardening.ps1']
+
 param tags object = {}
 
 // Storage account name: 3-24 chars, lowercase alphanumeric only
@@ -99,11 +102,12 @@ resource uploadScripts 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
     environmentVariables: [
       { name: 'STORAGE_ACCOUNT', value: storageAccount.name }
       { name: 'SCRIPT_BASE_URL', value: scriptSourceBaseUrl }
+      { name: 'SCRIPT_FILE_NAMES', value: join(scriptFileNames, ' ') }
     ]
     scriptContent: '''
       #!/bin/bash
       set -e
-      SCRIPTS=("windows-updates.ps1" "install-agents.ps1" "avd-optimizations.ps1" "security-hardening.ps1")
+      IFS=' ' read -ra SCRIPTS <<< "$SCRIPT_FILE_NAMES"
       for script in "${SCRIPTS[@]}"; do
         echo "Downloading ${script}..."
         curl -sLf "${SCRIPT_BASE_URL}/${script}" -o "/tmp/${script}" || { echo "Failed to download ${script}"; exit 1; }
