@@ -11,8 +11,8 @@ param enableWindowsServer2025 bool = true
 param enableWindows11MultiSession bool = true
 param enableWindows11SingleSession bool = true
 
-// Gallery name: alphanumeric, underscores, hyphens, dots — 1-80 chars
-var galleryName = 'gal-${namePrefix}'
+// Gallery name: alphanumeric, underscores, dots only — NO hyphens
+var galleryName = 'gal_${replace(namePrefix, '-', '_')}'
 
 resource gallery 'Microsoft.Compute/galleries@2023-07-03' = {
   name: galleryName
