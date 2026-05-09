@@ -108,7 +108,7 @@ Before deploying, ensure:
 > ```
 > Commit `main.json` alongside the Bicep source. The button uses the compiled file.
 
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fsimon-vedder%2Fbicep%2Fmain%2Fautomations%2Fbuild-golden-image%2Fwindows%2Fmain.json/createUIDefinitionUri/https%3A%2F%2Fraw.githubusercontent.com%2Fsimon-vedder%2Fbicep%2Fmain%2Fautomations%2Fbuild-golden-image%2Fwindows%2FcreateUiDefinition.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fsimon-vedder%2Fbicep%2Fadd%2Fgoldenimagebuilder%2Fautomations%2Fbuild-golden-image%2Fwindows%2Fmain.json/createUIDefinitionUri/https%3A%2F%2Fraw.githubusercontent.com%2Fsimon-vedder%2Fbicep%2Fadd%2Fgoldenimagebuilder%2Fautomations%2Fbuild-golden-image%2Fwindows%2FcreateUiDefinition.json)
 
 The portal wizard walks through:
 - **Image Selection** — which OS types to build
