@@ -1,0 +1,271 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/0.1.2-preview/CreateUIDefinition.MultiVm.json#",
+  "handler": "Microsoft.Azure.CreateUIDef",
+  "version": "0.1.2-preview",
+  "parameters": {
+    "basics": [
+      {
+        "name": "namePrefix",
+        "type": "Microsoft.Common.TextBox",
+        "label": "Resource name prefix",
+        "placeholder": "gib-contoso-prod",
+        "toolTip": "Prefix for all resource names. 3-15 characters, lowercase letters, numbers, and hyphens. Must start with a letter. Example: gib-contoso-prod",
+        "defaultValue": "",
+        "constraints": {
+          "required": true,
+          "regex": "^[a-z][a-z0-9-]{2,14}$",
+          "validationMessage": "3-15 characters, lowercase letters/numbers/hyphens only. Must start with a letter."
+        }
+      }
+    ],
+    "steps": [
+      {
+        "name": "imageSelection",
+        "label": "Image Selection",
+        "subLabel": {
+          "preValidation": "Select the OS images to build",
+          "postValidation": "Done"
+        },
+        "bladeTitle": "Image Selection",
+        "elements": [
+          {
+            "name": "infoOsSelect",
+            "type": "Microsoft.Common.InfoBox",
+            "visible": true,
+            "options": {
+              "icon": "Info",
+              "text": "Select which golden images to build. At least one must be enabled. Each enabled image creates a separate Azure Image Builder template and image definition in the Compute Gallery."
+            }
+          },
+          {
+            "name": "enableWindowsServer2022",
+            "type": "Microsoft.Common.CheckBox",
+            "label": "Windows Server 2022 (Datacenter Azure Edition)",
+            "toolTip": "Builds a golden image for Windows Server 2022. Suitable for IaaS VM workloads.",
+            "defaultValue": true
+          },
+          {
+            "name": "enableWindowsServer2025",
+            "type": "Microsoft.Common.CheckBox",
+            "label": "Windows Server 2025 (Datacenter Azure Edition)",
+            "toolTip": "Builds a golden image for Windows Server 2025. Suitable for IaaS VM workloads.",
+            "defaultValue": true
+          },
+          {
+            "name": "enableWindows11MultiSession",
+            "type": "Microsoft.Common.CheckBox",
+            "label": "Windows 11 Multi-Session (AVD pooled hosts)",
+            "toolTip": "Builds a golden image for AVD pooled session hosts (win11-24h2-avd SKU).",
+            "defaultValue": true
+          },
+          {
+            "name": "enableWindows11SingleSession",
+            "type": "Microsoft.Common.CheckBox",
+            "label": "Windows 11 Single-Session (AVD personal / standard VMs)",
+            "toolTip": "Builds a golden image for AVD personal hosts or standard VMs (win11-24h2-ent SKU).",
+            "defaultValue": false
+          }
+        ]
+      },
+      {
+        "name": "customization",
+        "label": "Customization",
+        "subLabel": {
+          "preValidation": "Configure image content",
+          "postValidation": "Done"
+        },
+        "bladeTitle": "Customization",
+        "elements": [
+          {
+            "name": "infoCustomization",
+            "type": "Microsoft.Common.InfoBox",
+            "visible": true,
+            "options": {
+              "icon": "Info",
+              "text": "Windows Updates are always applied. All other customizations are optional."
+            }
+          },
+          {
+            "name": "installAzureMonitorAgent",
+            "type": "Microsoft.Common.CheckBox",
+            "label": "Install Azure Monitor Agent",
+            "toolTip": "Pre-installs the Azure Monitor Agent during the build. Recommended for VM observability.",
+            "defaultValue": true
+          },
+          {
+            "name": "installDefenderForEndpoint",
+            "type": "Microsoft.Common.CheckBox",
+            "label": "Configure Microsoft Defender for Endpoint prerequisites",
+            "toolTip": "Ensures Defender is enabled and signatures are up to date. Full MDE onboarding requires an org-specific package applied post-deployment.",
+            "defaultValue": true
+          },
+          {
+            "name": "enableSecurityHardening",
+            "type": "Microsoft.Common.CheckBox",
+            "label": "Apply CIS-aligned security hardening",
+            "toolTip": "Applies registry hardening, disables legacy TLS/SMBv1, enables firewall, configures NTLM settings. Disables Print Spooler — re-enable if printing is required.",
+            "defaultValue": false
+          },
+          {
+            "name": "enableAvdOptimizations",
+            "type": "Microsoft.Common.CheckBox",
+            "label": "Apply AVD optimizations (applies to Win11 images only)",
+            "toolTip": "Installs FSLogix, configures Teams for AVD, disables non-essential services and scheduled tasks, applies performance settings.",
+            "defaultValue": true
+          }
+        ]
+      },
+      {
+        "name": "schedule",
+        "label": "Schedule & Notifications",
+        "subLabel": {
+          "preValidation": "Configure build schedule",
+          "postValidation": "Done"
+        },
+        "bladeTitle": "Schedule & Notifications",
+        "elements": [
+          {
+            "name": "infoSchedule",
+            "type": "Microsoft.Common.InfoBox",
+            "visible": true,
+            "options": {
+              "icon": "Info",
+              "text": "Builds run monthly on the selected day at the selected hour (UTC). Day 15 is ~3 days after Patch Tuesday — recommended for server images. A Logic App is deployed with an HTTP trigger for on-demand builds."
+            }
+          },
+          {
+            "name": "buildScheduleDayOfMonth",
+            "type": "Microsoft.Common.Slider",
+            "label": "Build day of month",
+            "toolTip": "Day of month (1-28) the scheduled build runs. Day 15 = approximately 3 days after Patch Tuesday.",
+            "min": 1,
+            "max": 28,
+            "defaultValue": 15,
+            "showStepMarkers": false
+          },
+          {
+            "name": "buildScheduleHour",
+            "type": "Microsoft.Common.Slider",
+            "label": "Build hour (UTC)",
+            "toolTip": "Hour (0-23, UTC) the build starts. 2 = 02:00 UTC.",
+            "min": 0,
+            "max": 23,
+            "defaultValue": 2,
+            "showStepMarkers": false
+          },
+          {
+            "name": "notificationEmail",
+            "type": "Microsoft.Common.TextBox",
+            "label": "Notification email address",
+            "placeholder": "ops@contoso.com",
+            "toolTip": "Email address to notify on build success or failure via Azure Monitor alerts. Leave empty to disable.",
+            "defaultValue": "",
+            "constraints": {
+              "required": false,
+              "regex": "^$|^[\\w.+-]+@[\\w-]+\\.[\\w.]+$",
+              "validationMessage": "Enter a valid email address or leave empty."
+            }
+          },
+          {
+            "name": "enableLogAnalytics",
+            "type": "Microsoft.Common.CheckBox",
+            "label": "Deploy Log Analytics workspace for build monitoring",
+            "toolTip": "Deploys a Log Analytics workspace (PerGB2018, 30-day retention) for centralized build log aggregation.",
+            "defaultValue": false
+          }
+        ]
+      },
+      {
+        "name": "networking",
+        "label": "Networking",
+        "subLabel": {
+          "preValidation": "Configure VNet injection (optional)",
+          "postValidation": "Done"
+        },
+        "bladeTitle": "Networking",
+        "elements": [
+          {
+            "name": "infoNetworking",
+            "type": "Microsoft.Common.InfoBox",
+            "visible": true,
+            "options": {
+              "icon": "Info",
+              "text": "By default, AIB build VMs run in a Microsoft-managed network with outbound internet access. Enable VNet injection if your scripts are in private storage, or if corporate policy requires build VMs in your network."
+            }
+          },
+          {
+            "name": "useVNetInjection",
+            "type": "Microsoft.Common.CheckBox",
+            "label": "Inject AIB build VM into a customer VNet",
+            "toolTip": "Routes the AIB build VM through your VNet. Required for private script storage or restricted outbound internet.",
+            "defaultValue": false
+          },
+          {
+            "name": "vnetSelector",
+            "type": "Microsoft.Network.VirtualNetworkCombo",
+            "label": {
+              "virtualNetwork": "Virtual network",
+              "subnets": "Subnets"
+            },
+            "toolTip": {
+              "virtualNetwork": "VNet to inject the AIB build VM into.",
+              "subnets": "Subnet for the AIB build VM. Must have no NSG rules blocking outbound to Azure services."
+            },
+            "defaultValue": {
+              "name": "",
+              "addressPrefixSize": "/24"
+            },
+            "constraints": {
+              "minAddressPrefixSize": "/29"
+            },
+            "options": {
+              "hideExisting": false
+            },
+            "subnets": {
+              "aibSubnet": {
+                "label": "AIB build subnet",
+                "defaultValue": {
+                  "name": "snet-aib",
+                  "addressPrefixSize": "/27"
+                },
+                "constraints": {
+                  "minAddressPrefixSize": "/29",
+                  "minCount": 1
+                }
+              }
+            },
+            "visible": "[steps('networking').useVNetInjection]"
+          },
+          {
+            "name": "usePrivateScriptStorage",
+            "type": "Microsoft.Common.CheckBox",
+            "label": "Use private Azure Blob storage for customization scripts",
+            "toolTip": "Deploys a storage account and uploads scripts there. The AIB UAMI is granted Storage Blob Data Reader. Use when the build VM cannot reach GitHub.",
+            "defaultValue": false
+          }
+        ]
+      }
+    ],
+    "outputs": {
+      "namePrefix": "[basics('namePrefix')]",
+      "location": "[location()]",
+      "enableWindowsServer2022": "[steps('imageSelection').enableWindowsServer2022]",
+      "enableWindowsServer2025": "[steps('imageSelection').enableWindowsServer2025]",
+      "enableWindows11MultiSession": "[steps('imageSelection').enableWindows11MultiSession]",
+      "enableWindows11SingleSession": "[steps('imageSelection').enableWindows11SingleSession]",
+      "installAzureMonitorAgent": "[steps('customization').installAzureMonitorAgent]",
+      "installDefenderForEndpoint": "[steps('customization').installDefenderForEndpoint]",
+      "enableSecurityHardening": "[steps('customization').enableSecurityHardening]",
+      "enableAvdOptimizations": "[steps('customization').enableAvdOptimizations]",
+      "buildScheduleDayOfMonth": "[steps('schedule').buildScheduleDayOfMonth]",
+      "buildScheduleHour": "[steps('schedule').buildScheduleHour]",
+      "notificationEmail": "[steps('schedule').notificationEmail]",
+      "enableLogAnalytics": "[steps('schedule').enableLogAnalytics]",
+      "useVNetInjection": "[steps('networking').useVNetInjection]",
+      "vnetResourceGroupName": "[if(steps('networking').useVNetInjection, last(take(split(steps('networking').vnetSelector.id, '/'), 5)), '')]",
+      "vnetName": "[if(steps('networking').useVNetInjection, steps('networking').vnetSelector.name, '')]",
+      "subnetName": "[if(steps('networking').useVNetInjection, steps('networking').vnetSelector.subnets.aibSubnet.name, '')]",
+      "usePrivateScriptStorage": "[steps('networking').usePrivateScriptStorage]"
+    }
+  }
+}

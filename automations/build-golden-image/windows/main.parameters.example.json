@@ -1,0 +1,63 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "namePrefix": {
+      "value": "gib-contoso-prod"
+    },
+    "enableWindowsServer2022": {
+      "value": true
+    },
+    "enableWindowsServer2025": {
+      "value": true
+    },
+    "enableWindows11MultiSession": {
+      "value": true
+    },
+    "enableWindows11SingleSession": {
+      "value": false
+    },
+    "installAzureMonitorAgent": {
+      "value": true
+    },
+    "installDefenderForEndpoint": {
+      "value": true
+    },
+    "enableSecurityHardening": {
+      "value": false
+    },
+    "enableAvdOptimizations": {
+      "value": true
+    },
+    "buildScheduleDayOfMonth": {
+      "value": 15
+    },
+    "buildScheduleHour": {
+      "value": 2
+    },
+    "notificationEmail": {
+      "value": ""
+    },
+    "enableLogAnalytics": {
+      "value": false
+    },
+    "useVNetInjection": {
+      "value": false
+    },
+    "vnetResourceGroupName": {
+      "value": ""
+    },
+    "vnetName": {
+      "value": ""
+    },
+    "subnetName": {
+      "value": ""
+    },
+    "usePrivateScriptStorage": {
+      "value": false
+    },
+    "additionalReplicationRegions": {
+      "value": []
+    }
+  }
+}
