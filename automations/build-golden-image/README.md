@@ -2,6 +2,8 @@
 
 Fully automated golden image factory for Windows (Server + AVD) and Linux (Ubuntu + RHEL) using **Azure Image Builder**, **Azure Compute Gallery**, and **Logic Apps** — deployable in one click.
 
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fsimon-vedder%2Fbicep%2Fadd%2Fgoldenimagebuilder%2Fautomations%2Fbuild-golden-image%2Fmain.json/createUIDefinitionUri/https%3A%2F%2Fraw.githubusercontent.com%2Fsimon-vedder%2Fbicep%2Fadd%2Fgoldenimagebuilder%2Fautomations%2Fbuild-golden-image%2FcreateUiDefinition.json)
+
 ---
 
 ## What is this?
