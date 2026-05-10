@@ -76,7 +76,6 @@ graph TD
 | AIB Image Template (×n) | `aib-{prefix}-{os}` | Build config per enabled OS |
 | Logic App | `la-{prefix}-runner` | HTTP trigger — POST to start an on-demand build cycle |
 | Logic App | `la-{prefix}-scheduler` | Recurrence trigger — fires monthly on configured day/hour |
-| Role assignments | (on RG) | Contributor for both UAMIs |
 | Storage account *(optional)* | `stgib{prefix}` | Private script storage (if GitHub not reachable) |
 | Log Analytics *(optional)* | `log-{prefix}-gib` | Centralized build log aggregation |
 | Action Group *(optional)* | `ag-{prefix}-gib` | Email notification target |
