@@ -42,12 +42,6 @@ param enableRhel8 bool = false
 param enableRhel9 bool = false
 
 // Customization
-@description('Install Azure Monitor Agent during image build.')
-param installAzureMonitorAgent bool = true
-
-@description('Install Microsoft Defender for Endpoint prerequisites during image build.')
-param installDefenderForEndpoint bool = true
-
 @description('Apply CIS-aligned security hardening.')
 param enableSecurityHardening bool = false
 
@@ -236,8 +230,6 @@ module windowsImageTemplates 'windows/modules/imageTemplate.bicep' = [for config
     aibIdentityId: identity.outputs.aibIdentityId
     galleryName: gallery.outputs.galleryName
     scriptBaseUrl: resolvedWindowsScriptBaseUrl
-    installAzureMonitorAgent: installAzureMonitorAgent
-    installDefenderForEndpoint: installDefenderForEndpoint
     enableSecurityHardening: enableSecurityHardening
     enableAvdOptimizations: enableAvdOptimizations && config.isAvd
     useVNetInjection: useVNetInjection
@@ -264,8 +256,6 @@ module linuxImageTemplates 'linux/modules/imageTemplate.bicep' = [for config in 
     aibIdentityId: identity.outputs.aibIdentityId
     galleryName: gallery.outputs.galleryName
     scriptBaseUrl: resolvedLinuxScriptBaseUrl
-    installAzureMonitorAgent: installAzureMonitorAgent
-    installDefenderForEndpoint: installDefenderForEndpoint
     enableSecurityHardening: enableSecurityHardening
     useVNetInjection: useVNetInjection
     vnetResourceGroupName: vnetResourceGroupName
@@ -308,9 +298,9 @@ module storage 'shared/modules/storage.bicep' = if (usePrivateScriptStorage) {
     namePrefix: namePrefix
     aibIdentityPrincipalId: identity.outputs.aibIdentityPrincipalId
     scriptSourceBaseUrl: windowsScriptBaseUrl
-    scriptFileNames: ['windows-updates.ps1', 'install-agents.ps1', 'avd-optimizations.ps1', 'security-hardening.ps1']
+    scriptFileNames: ['windows-updates.ps1', 'avd-optimizations.ps1', 'security-hardening.ps1']
     secondaryScriptSourceBaseUrl: linuxScriptBaseUrl
-    secondaryScriptFileNames: ['linux-updates.sh', 'install-ama.sh', 'install-mde.sh', 'security-hardening.sh']
+    secondaryScriptFileNames: ['linux-updates.sh', 'security-hardening.sh']
     tags: tags
   }
 }

@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.43.8.12551",
-      "templateHash": "2514225693483136079"
+      "templateHash": "12117144543791121287"
     }
   },
   "parameters": {
@@ -85,20 +85,6 @@
       "defaultValue": false,
       "metadata": {
         "description": "Build and maintain a RHEL 9 golden image."
-      }
-    },
-    "installAzureMonitorAgent": {
-      "type": "bool",
-      "defaultValue": true,
-      "metadata": {
-        "description": "Install Azure Monitor Agent during image build."
-      }
-    },
-    "installDefenderForEndpoint": {
-      "type": "bool",
-      "defaultValue": true,
-      "metadata": {
-        "description": "Install Microsoft Defender for Endpoint prerequisites during image build."
       }
     },
     "enableSecurityHardening": {
@@ -452,7 +438,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.43.8.12551",
-              "templateHash": "4181568367778932843"
+              "templateHash": "13650624707293752754"
             }
           },
           "parameters": {
@@ -530,6 +516,12 @@
                 "osType": "Windows",
                 "osState": "Generalized",
                 "hyperVGeneration": "V2",
+                "features": [
+                  {
+                    "name": "SecurityType",
+                    "value": "TrustedLaunch"
+                  }
+                ],
                 "identifier": {
                   "publisher": "GoldenImage",
                   "offer": "WindowsServer",
@@ -561,6 +553,12 @@
                 "osType": "Windows",
                 "osState": "Generalized",
                 "hyperVGeneration": "V2",
+                "features": [
+                  {
+                    "name": "SecurityType",
+                    "value": "TrustedLaunch"
+                  }
+                ],
                 "identifier": {
                   "publisher": "GoldenImage",
                   "offer": "WindowsServer",
@@ -592,6 +590,12 @@
                 "osType": "Windows",
                 "osState": "Generalized",
                 "hyperVGeneration": "V2",
+                "features": [
+                  {
+                    "name": "SecurityType",
+                    "value": "TrustedLaunch"
+                  }
+                ],
                 "identifier": {
                   "publisher": "GoldenImage",
                   "offer": "Windows11",
@@ -623,6 +627,12 @@
                 "osType": "Windows",
                 "osState": "Generalized",
                 "hyperVGeneration": "V2",
+                "features": [
+                  {
+                    "name": "SecurityType",
+                    "value": "TrustedLaunch"
+                  }
+                ],
                 "identifier": {
                   "publisher": "GoldenImage",
                   "offer": "Windows11",
@@ -654,6 +664,12 @@
                 "osType": "Linux",
                 "osState": "Generalized",
                 "hyperVGeneration": "V2",
+                "features": [
+                  {
+                    "name": "SecurityType",
+                    "value": "TrustedLaunch"
+                  }
+                ],
                 "identifier": {
                   "publisher": "GoldenImage",
                   "offer": "Ubuntu",
@@ -685,6 +701,12 @@
                 "osType": "Linux",
                 "osState": "Generalized",
                 "hyperVGeneration": "V2",
+                "features": [
+                  {
+                    "name": "SecurityType",
+                    "value": "TrustedLaunch"
+                  }
+                ],
                 "identifier": {
                   "publisher": "GoldenImage",
                   "offer": "Ubuntu",
@@ -716,6 +738,12 @@
                 "osType": "Linux",
                 "osState": "Generalized",
                 "hyperVGeneration": "V2",
+                "features": [
+                  {
+                    "name": "SecurityType",
+                    "value": "TrustedLaunch"
+                  }
+                ],
                 "identifier": {
                   "publisher": "GoldenImage",
                   "offer": "RHEL",
@@ -747,6 +775,12 @@
                 "osType": "Linux",
                 "osState": "Generalized",
                 "hyperVGeneration": "V2",
+                "features": [
+                  {
+                    "name": "SecurityType",
+                    "value": "TrustedLaunch"
+                  }
+                ],
                 "identifier": {
                   "publisher": "GoldenImage",
                   "offer": "RHEL",
@@ -825,12 +859,6 @@
           "scriptBaseUrl": {
             "value": "[variables('resolvedWindowsScriptBaseUrl')]"
           },
-          "installAzureMonitorAgent": {
-            "value": "[parameters('installAzureMonitorAgent')]"
-          },
-          "installDefenderForEndpoint": {
-            "value": "[parameters('installDefenderForEndpoint')]"
-          },
           "enableSecurityHardening": {
             "value": "[parameters('enableSecurityHardening')]"
           },
@@ -863,7 +891,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.43.8.12551",
-              "templateHash": "1595505465306882528"
+              "templateHash": "2427129262745539411"
             }
           },
           "parameters": {
@@ -923,14 +951,6 @@
                 "description": "Base URL for PowerShell scripts (raw GitHub path or blob container URL)."
               }
             },
-            "installAzureMonitorAgent": {
-              "type": "bool",
-              "defaultValue": true
-            },
-            "installDefenderForEndpoint": {
-              "type": "bool",
-              "defaultValue": true
-            },
             "enableSecurityHardening": {
               "type": "bool",
               "defaultValue": false
@@ -985,7 +1005,6 @@
                 "restartTimeout": "10m"
               }
             ],
-            "agentSteps": "[if(or(parameters('installAzureMonitorAgent'), parameters('installDefenderForEndpoint')), createArray(createObject('type', 'PowerShell', 'name', 'InstallAgents', 'scriptUri', format('{0}/install-agents.ps1', parameters('scriptBaseUrl')), 'runElevated', true(), 'runAsSystem', true(), 'validExitCodes', createArray(0, 3010))), createArray())]",
             "securitySteps": "[if(parameters('enableSecurityHardening'), createArray(createObject('type', 'PowerShell', 'name', 'SecurityHardening', 'scriptUri', format('{0}/security-hardening.ps1', parameters('scriptBaseUrl')), 'runElevated', true(), 'runAsSystem', true())), createArray())]",
             "avdSteps": "[if(and(parameters('isAvd'), parameters('enableAvdOptimizations')), createArray(createObject('type', 'PowerShell', 'name', 'AvdOptimizations', 'scriptUri', format('{0}/avd-optimizations.ps1', parameters('scriptBaseUrl')), 'runElevated', true(), 'runAsSystem', true())), createArray())]",
             "finalRestartStep": [
@@ -996,7 +1015,7 @@
                 "restartTimeout": "5m"
               }
             ],
-            "allCustomizations": "[concat(variables('updatesSteps'), variables('agentSteps'), variables('securitySteps'), variables('avdSteps'), variables('finalRestartStep'))]",
+            "allCustomizations": "[concat(variables('updatesSteps'), variables('securitySteps'), variables('avdSteps'), variables('finalRestartStep'))]",
             "vmProfileBase": {
               "vmSize": "Standard_D4s_v3",
               "osDiskSizeGB": 128
@@ -1105,12 +1124,6 @@
           "scriptBaseUrl": {
             "value": "[variables('resolvedLinuxScriptBaseUrl')]"
           },
-          "installAzureMonitorAgent": {
-            "value": "[parameters('installAzureMonitorAgent')]"
-          },
-          "installDefenderForEndpoint": {
-            "value": "[parameters('installDefenderForEndpoint')]"
-          },
           "enableSecurityHardening": {
             "value": "[parameters('enableSecurityHardening')]"
           },
@@ -1140,7 +1153,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.43.8.12551",
-              "templateHash": "15699978315299855180"
+              "templateHash": "6149661476736302270"
             }
           },
           "parameters": {
@@ -1189,14 +1202,6 @@
                 "description": "Base URL for shell customization scripts."
               }
             },
-            "installAzureMonitorAgent": {
-              "type": "bool",
-              "defaultValue": true
-            },
-            "installDefenderForEndpoint": {
-              "type": "bool",
-              "defaultValue": true
-            },
             "enableSecurityHardening": {
               "type": "bool",
               "defaultValue": false
@@ -1235,10 +1240,8 @@
                 "scriptUri": "[format('{0}/linux-updates.sh', parameters('scriptBaseUrl'))]"
               }
             ],
-            "amaCustomizers": "[if(parameters('installAzureMonitorAgent'), createArray(createObject('type', 'Shell', 'name', 'InstallAMA', 'scriptUri', format('{0}/install-ama.sh', parameters('scriptBaseUrl')))), createArray())]",
-            "mdeCustomizers": "[if(parameters('installDefenderForEndpoint'), createArray(createObject('type', 'Shell', 'name', 'InstallMDE', 'scriptUri', format('{0}/install-mde.sh', parameters('scriptBaseUrl')))), createArray())]",
             "hardeningCustomizers": "[if(parameters('enableSecurityHardening'), createArray(createObject('type', 'Shell', 'name', 'SecurityHardening', 'scriptUri', format('{0}/security-hardening.sh', parameters('scriptBaseUrl')))), createArray())]",
-            "allCustomizers": "[concat(variables('baseCustomizers'), variables('amaCustomizers'), variables('mdeCustomizers'), variables('hardeningCustomizers'))]",
+            "allCustomizers": "[concat(variables('baseCustomizers'), variables('hardeningCustomizers'))]",
             "distributeBase": [
               {
                 "type": "SharedImage",
@@ -1549,7 +1552,6 @@
           "scriptFileNames": {
             "value": [
               "windows-updates.ps1",
-              "install-agents.ps1",
               "avd-optimizations.ps1",
               "security-hardening.ps1"
             ]
@@ -1560,8 +1562,6 @@
           "secondaryScriptFileNames": {
             "value": [
               "linux-updates.sh",
-              "install-ama.sh",
-              "install-mde.sh",
               "security-hardening.sh"
             ]
           },

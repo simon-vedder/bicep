@@ -17,7 +17,9 @@ case "$ID" in
     apt-get clean
     ;;
   rhel)
-    dnf update -y
+    # Exclude RHUI client packages — updating them mid-transaction causes
+    # cache file not-found errors as Azure rotates the repo metadata.
+    dnf update --exclude='rhui-*' -y
     dnf clean all
     ;;
   *)

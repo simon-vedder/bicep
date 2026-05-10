@@ -24,8 +24,6 @@ param galleryName string
 @description('Base URL for PowerShell scripts (raw GitHub path or blob container URL).')
 param scriptBaseUrl string
 
-param installAzureMonitorAgent bool = true
-param installDefenderForEndpoint bool = true
 param enableSecurityHardening bool = false
 param enableAvdOptimizations bool = false
 
@@ -60,17 +58,6 @@ var updatesSteps = [
   }
 ]
 
-var agentSteps = (installAzureMonitorAgent || installDefenderForEndpoint) ? [
-  {
-    type: 'PowerShell'
-    name: 'InstallAgents'
-    scriptUri: '${scriptBaseUrl}/install-agents.ps1'
-    runElevated: true
-    runAsSystem: true
-    validExitCodes: [0, 3010]
-  }
-] : []
-
 var securitySteps = enableSecurityHardening ? [
   {
     type: 'PowerShell'
@@ -100,7 +87,7 @@ var finalRestartStep = [
   }
 ]
 
-var allCustomizations = concat(updatesSteps, agentSteps, securitySteps, avdSteps, finalRestartStep)
+var allCustomizations = concat(updatesSteps, securitySteps, avdSteps, finalRestartStep)
 
 // ── VNet config (conditional) ────────────────────────────────────────────────
 

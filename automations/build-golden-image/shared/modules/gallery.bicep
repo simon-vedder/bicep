@@ -37,6 +37,7 @@ resource imgDefWS2022 'Microsoft.Compute/galleries/images@2023-07-03' = if (enab
     osType: 'Windows'
     osState: 'Generalized'
     hyperVGeneration: 'V2'
+    features: [{ name: 'SecurityType', value: 'TrustedLaunch' }]
     identifier: {
       publisher: 'GoldenImage'
       offer: 'WindowsServer'
@@ -58,6 +59,7 @@ resource imgDefWS2025 'Microsoft.Compute/galleries/images@2023-07-03' = if (enab
     osType: 'Windows'
     osState: 'Generalized'
     hyperVGeneration: 'V2'
+    features: [{ name: 'SecurityType', value: 'TrustedLaunch' }]
     identifier: {
       publisher: 'GoldenImage'
       offer: 'WindowsServer'
@@ -79,6 +81,7 @@ resource imgDefWin11MS 'Microsoft.Compute/galleries/images@2023-07-03' = if (ena
     osType: 'Windows'
     osState: 'Generalized'
     hyperVGeneration: 'V2'
+    features: [{ name: 'SecurityType', value: 'TrustedLaunch' }]
     identifier: {
       publisher: 'GoldenImage'
       offer: 'Windows11'
@@ -100,6 +103,7 @@ resource imgDefWin11SS 'Microsoft.Compute/galleries/images@2023-07-03' = if (ena
     osType: 'Windows'
     osState: 'Generalized'
     hyperVGeneration: 'V2'
+    features: [{ name: 'SecurityType', value: 'TrustedLaunch' }]
     identifier: {
       publisher: 'GoldenImage'
       offer: 'Windows11'
@@ -121,6 +125,7 @@ resource imgDefUbuntu2204 'Microsoft.Compute/galleries/images@2023-07-03' = if (
     osType: 'Linux'
     osState: 'Generalized'
     hyperVGeneration: 'V2'
+    features: [{ name: 'SecurityType', value: 'TrustedLaunch' }]
     identifier: {
       publisher: 'GoldenImage'
       offer: 'Ubuntu'
@@ -142,6 +147,7 @@ resource imgDefUbuntu2404 'Microsoft.Compute/galleries/images@2023-07-03' = if (
     osType: 'Linux'
     osState: 'Generalized'
     hyperVGeneration: 'V2'
+    features: [{ name: 'SecurityType', value: 'TrustedLaunch' }]
     identifier: {
       publisher: 'GoldenImage'
       offer: 'Ubuntu'
@@ -163,6 +169,7 @@ resource imgDefRhel8 'Microsoft.Compute/galleries/images@2023-07-03' = if (enabl
     osType: 'Linux'
     osState: 'Generalized'
     hyperVGeneration: 'V2'
+    features: [{ name: 'SecurityType', value: 'TrustedLaunch' }]
     identifier: {
       publisher: 'GoldenImage'
       offer: 'RHEL'
@@ -184,6 +191,7 @@ resource imgDefRhel9 'Microsoft.Compute/galleries/images@2023-07-03' = if (enabl
     osType: 'Linux'
     osState: 'Generalized'
     hyperVGeneration: 'V2'
+    features: [{ name: 'SecurityType', value: 'TrustedLaunch' }]
     identifier: {
       publisher: 'GoldenImage'
       offer: 'RHEL'

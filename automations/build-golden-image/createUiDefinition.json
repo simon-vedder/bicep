@@ -113,18 +113,13 @@
         "label": "Customization",
         "elements": [
           {
-            "name": "installAzureMonitorAgent",
-            "type": "Microsoft.Common.CheckBox",
-            "label": "Install Azure Monitor Agent",
-            "toolTip": "Pre-installs AMA. Data collection rules must be assigned post-deployment.",
-            "defaultValue": true
-          },
-          {
-            "name": "installDefenderForEndpoint",
-            "type": "Microsoft.Common.CheckBox",
-            "label": "Install Microsoft Defender for Endpoint",
-            "toolTip": "Pre-installs MDE binary. Onboarding package must be applied post-deployment via Defender portal or Intune.",
-            "defaultValue": true
+            "name": "agentsInfo",
+            "type": "Microsoft.Common.InfoBox",
+            "visible": true,
+            "options": {
+              "text": "Azure Monitor Agent and Microsoft Defender for Endpoint are deployed as VM Extensions after VM provisioning — not pre-baked into the image. This ensures you see them in the Azure portal Extensions blade and can manage versions independently.",
+              "style": "Info"
+            }
           },
           {
             "name": "enableSecurityHardening",
@@ -246,8 +241,6 @@
       "enableUbuntu2404": "[steps('osSelection').enableUbuntu2404]",
       "enableRhel8": "[steps('osSelection').enableRhel8]",
       "enableRhel9": "[steps('osSelection').enableRhel9]",
-      "installAzureMonitorAgent": "[steps('customization').installAzureMonitorAgent]",
-      "installDefenderForEndpoint": "[steps('customization').installDefenderForEndpoint]",
       "enableSecurityHardening": "[steps('customization').enableSecurityHardening]",
       "enableAvdOptimizations": "[steps('customization').enableAvdOptimizations]",
       "buildScheduleDayOfMonth": "[steps('scheduleNotifications').buildScheduleDayOfMonth]",

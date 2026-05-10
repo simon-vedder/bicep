@@ -20,8 +20,6 @@ param galleryName string
 @description('Base URL for shell customization scripts.')
 param scriptBaseUrl string
 
-param installAzureMonitorAgent bool = true
-param installDefenderForEndpoint bool = true
 param enableSecurityHardening bool = false
 
 param useVNetInjection bool = false
@@ -43,22 +41,6 @@ var baseCustomizers = [
   }
 ]
 
-var amaCustomizers = installAzureMonitorAgent ? [
-  {
-    type: 'Shell'
-    name: 'InstallAMA'
-    scriptUri: '${scriptBaseUrl}/install-ama.sh'
-  }
-] : []
-
-var mdeCustomizers = installDefenderForEndpoint ? [
-  {
-    type: 'Shell'
-    name: 'InstallMDE'
-    scriptUri: '${scriptBaseUrl}/install-mde.sh'
-  }
-] : []
-
 var hardeningCustomizers = enableSecurityHardening ? [
   {
     type: 'Shell'
@@ -67,7 +49,7 @@ var hardeningCustomizers = enableSecurityHardening ? [
   }
 ] : []
 
-var allCustomizers = concat(baseCustomizers, amaCustomizers, mdeCustomizers, hardeningCustomizers)
+var allCustomizers = concat(baseCustomizers, hardeningCustomizers)
 
 var distributeBase = [
   {

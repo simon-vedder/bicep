@@ -29,12 +29,6 @@ param enableRhel8 bool = false
 param enableRhel9 bool = true
 
 // Customization
-@description('Install Azure Monitor Agent during image build.')
-param installAzureMonitorAgent bool = true
-
-@description('Install Microsoft Defender for Endpoint during image build.')
-param installDefenderForEndpoint bool = true
-
 @description('Apply CIS-aligned security hardening.')
 param enableSecurityHardening bool = false
 
@@ -179,8 +173,6 @@ module imageTemplates 'modules/imageTemplate.bicep' = [for config in enabledImag
     aibIdentityId: identity.outputs.aibIdentityId
     galleryName: gallery.outputs.galleryName
     scriptBaseUrl: resolvedScriptBaseUrl
-    installAzureMonitorAgent: installAzureMonitorAgent
-    installDefenderForEndpoint: installDefenderForEndpoint
     enableSecurityHardening: enableSecurityHardening
     useVNetInjection: useVNetInjection
     vnetResourceGroupName: vnetResourceGroupName
@@ -214,7 +206,7 @@ module logicApp '../shared/modules/logicapp.bicep' = {
 
 // ── Optional: private script storage ─────────────────────────────────────────
 
-var linuxScriptFileNames = ['linux-updates.sh', 'install-ama.sh', 'install-mde.sh', 'security-hardening.sh']
+var linuxScriptFileNames = ['linux-updates.sh', 'security-hardening.sh']
 
 module storage '../shared/modules/storage.bicep' = if (usePrivateScriptStorage) {
   name: 'storage'
