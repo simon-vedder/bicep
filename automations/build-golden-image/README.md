@@ -153,7 +153,7 @@ Before deploying, ensure:
 
 The portal wizard walks through:
 - **Image Selection** — Windows and Linux OS types to build (independent toggles)
-- **Customization** — agents, security hardening, AVD optimizations (Win11 only)
+- **Customization** — security hardening, AVD optimizations (Win11 only)
 - **Schedule & Notifications** — build day/hour, email alerts
 - **Networking** — optional VNet injection, optional private script storage
 
@@ -258,8 +258,6 @@ imageReference: {
 |---|---|---|---|
 | `namePrefix` | string | *(required)* | 3-15 chars, lowercase. Drives all resource names. Example: `gib-contoso-prod` |
 | `location` | string | RG location | Azure region |
-| `installAzureMonitorAgent` | bool | `true` | Pre-install Azure Monitor Agent |
-| `installDefenderForEndpoint` | bool | `true` | Pre-install MDE binary |
 | `enableSecurityHardening` | bool | `false` | CIS-aligned hardening (Windows: registry/TLS/SMBv1/firewall; Linux: sysctl/SSH/firewall) |
 | `windowsScriptBaseUrl` | string | this repo | Base URL for PowerShell scripts |
 | `linuxScriptBaseUrl` | string | this repo | Base URL for shell scripts |
@@ -302,7 +300,6 @@ imageReference: {
 | Script | Always runs | Description |
 |---|---|---|
 | `windows-updates.ps1` | Yes | Installs all non-preview Windows Updates via PSWindowsUpdate |
-| `install-agents.ps1` | If agents enabled | Installs AMA; configures MDE prerequisites |
 | `security-hardening.ps1` | If hardening enabled | Registry hardening, disables legacy TLS/SMBv1, enables firewall |
 | `avd-optimizations.ps1` | If AVD opts + Win11 | FSLogix, Teams AVD mode, scheduled task cleanup, OS tuning |
 
@@ -312,9 +309,7 @@ Scripts detect the OS automatically (`/etc/os-release`) and use `apt` for Ubuntu
 
 | Script | Always runs | Description |
 |---|---|---|
-| `linux-updates.sh` | Yes | Full package update (`apt upgrade` / `dnf update`) |
-| `install-ama.sh` | If AMA enabled | Installs `azuremonitoragent` from Microsoft package repo |
-| `install-mde.sh` | If MDE enabled | Installs `mdatp` binary — onboarding package required post-deployment |
+| `linux-updates.sh` | Yes | Full package update (`apt upgrade` / `dnf update --exclude='rhui-*'` on RHEL) |
 | `security-hardening.sh` | If hardening enabled | sysctl hardening, SSH restrictions, firewall (ufw/firewalld), disable legacy modules |
 
 To add custom scripts: add a file to the relevant `scripts/` directory and add a customization step in the corresponding `modules/imageTemplate.bicep`.
@@ -342,7 +337,6 @@ build-golden-image/
 │   │   └── imageTemplate.bicep # AIB template for Windows (PowerShell customizers)
 │   └── scripts/
 │       ├── windows-updates.ps1
-│       ├── install-agents.ps1
 │       ├── avd-optimizations.ps1
 │       └── security-hardening.ps1
 └── linux/
@@ -353,8 +347,6 @@ build-golden-image/
     │   └── imageTemplate.bicep # AIB template for Linux (Shell customizers)
     └── scripts/
         ├── linux-updates.sh
-        ├── install-ama.sh
-        ├── install-mde.sh
         └── security-hardening.sh
 ```
 
@@ -363,7 +355,8 @@ build-golden-image/
 ## Known limitations
 
 - **ACI quota** — each parallel AIB build consumes ~3.8 ACI StandardCores. The default regional quota (10 cores) is insufficient for 3+ simultaneous builds. Request an increase before running large builds. See [Prerequisites](#prerequisites).
-- **MDE full onboarding** requires an org-specific onboarding package applied post-deployment via Intune, Defender portal, or Group Policy/Ansible. Both `install-agents.ps1` and `install-mde.sh` pre-stage the binary only.
+- **Azure Monitor Agent and MDE** are not pre-baked into the image. Deploy them as VM Extensions after VM provisioning — via Azure Policy `DeployIfNotExists`, Intune, or Defender portal. This is intentional: extensions must be registered against a specific VM resource ID to appear in the portal Extensions blade.
+- **Trusted Launch** is enabled on all gallery image definitions (`SecurityType: TrustedLaunch`). VMs provisioned from these images support Secure Boot and vTPM. Existing image definitions without Trusted Launch cannot be updated in-place — delete and recreate them to change the security type.
 - **Print Spooler** is disabled by `security-hardening.ps1`. Re-enable it in the script if the image type requires printing.
 - **Logic App manual trigger URL** contains a SAS token valid for ~90 days. After expiry, retrieve a new URL from the portal (Logic App → Triggers → manual → Get URL) or redeploy.
 - **Role assignments** use `Contributor` on the resource group. For production environments, scope these down to custom roles with least privilege.
