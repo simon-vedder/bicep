@@ -1,0 +1,54 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "namePrefix": {
+      "value": "gib-contoso-prod"
+    },
+    "location": {
+      "value": "westeurope"
+    },
+    "enableUbuntu2204": {
+      "value": true
+    },
+    "enableUbuntu2404": {
+      "value": true
+    },
+    "enableRhel8": {
+      "value": false
+    },
+    "enableRhel9": {
+      "value": true
+    },
+    "installAzureMonitorAgent": {
+      "value": true
+    },
+    "installDefenderForEndpoint": {
+      "value": true
+    },
+    "enableSecurityHardening": {
+      "value": false
+    },
+    "buildScheduleDayOfMonth": {
+      "value": 15
+    },
+    "buildScheduleHour": {
+      "value": 2
+    },
+    "notificationEmail": {
+      "value": ""
+    },
+    "enableLogAnalytics": {
+      "value": false
+    },
+    "useVNetInjection": {
+      "value": false
+    },
+    "usePrivateScriptStorage": {
+      "value": false
+    },
+    "additionalReplicationRegions": {
+      "value": []
+    }
+  }
+}
