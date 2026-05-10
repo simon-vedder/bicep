@@ -43,7 +43,7 @@ param enableAvdOptimizations bool = true
 
 // Script source
 @description('Base URL for PowerShell customization scripts. Change only if using a fork or private storage.')
-param scriptBaseUrl string = 'https://raw.githubusercontent.com/simon-vedder/bicep/add/goldenimagebuilder/automations/build-golden-image/windows/scripts'
+param scriptBaseUrl string = 'https://raw.githubusercontent.com/simon-vedder/bicep/main/automations/build-golden-image/windows/scripts'
 
 @description('Use a private Azure Blob container for scripts instead of GitHub.')
 param usePrivateScriptStorage bool = false

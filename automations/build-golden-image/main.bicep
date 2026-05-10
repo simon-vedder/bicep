@@ -50,10 +50,10 @@ param enableAvdOptimizations bool = true
 
 // Script sources
 @description('Base URL for Windows PowerShell customization scripts.')
-param windowsScriptBaseUrl string = 'https://raw.githubusercontent.com/simon-vedder/bicep/add/goldenimagebuilder/automations/build-golden-image/windows/scripts'
+param windowsScriptBaseUrl string = 'https://raw.githubusercontent.com/simon-vedder/bicep/main/automations/build-golden-image/windows/scripts'
 
 @description('Base URL for Linux shell customization scripts.')
-param linuxScriptBaseUrl string = 'https://raw.githubusercontent.com/simon-vedder/bicep/add/goldenimagebuilder/automations/build-golden-image/linux/scripts'
+param linuxScriptBaseUrl string = 'https://raw.githubusercontent.com/simon-vedder/bicep/main/automations/build-golden-image/linux/scripts'
 
 @description('Use a private Azure Blob container for scripts instead of GitHub.')
 param usePrivateScriptStorage bool = false

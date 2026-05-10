@@ -34,7 +34,7 @@ param enableSecurityHardening bool = false
 
 // Script source
 @description('Base URL for shell customization scripts. Change only if using a fork or private storage.')
-param scriptBaseUrl string = 'https://raw.githubusercontent.com/simon-vedder/bicep/add/goldenimagebuilder/automations/build-golden-image/linux/scripts'
+param scriptBaseUrl string = 'https://raw.githubusercontent.com/simon-vedder/bicep/main/automations/build-golden-image/linux/scripts'
 
 @description('Use a private Azure Blob container for scripts instead of GitHub.')
 param usePrivateScriptStorage bool = false
