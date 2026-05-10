@@ -97,23 +97,70 @@ module gallery '../shared/modules/gallery.bicep' = {
   }
 }
 
+// ── Custom role definitions (least privilege) ─────────────────────────────────
+
+resource aibCustomRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' = {
+  name: guid(resourceGroup().id, namePrefix, 'aib-image-publisher')
+  properties: {
+    roleName: 'AIB Image Publisher — ${namePrefix}'
+    description: 'Minimum permissions for Azure Image Builder to publish images to the Compute Gallery.'
+    type: 'CustomRole'
+    permissions: [
+      {
+        actions: [
+          'Microsoft.Compute/galleries/read'
+          'Microsoft.Compute/galleries/images/read'
+          'Microsoft.Compute/galleries/images/versions/read'
+          'Microsoft.Compute/galleries/images/versions/write'
+          'Microsoft.Compute/images/write'
+          'Microsoft.Compute/images/read'
+          'Microsoft.Compute/images/delete'
+        ]
+        notActions: []
+        dataActions: []
+        notDataActions: []
+      }
+    ]
+    assignableScopes: [resourceGroup().id]
+  }
+}
+
+resource laCustomRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' = {
+  name: guid(resourceGroup().id, namePrefix, 'aib-build-trigger')
+  properties: {
+    roleName: 'AIB Build Trigger — ${namePrefix}'
+    description: 'Minimum permissions for the Logic App to trigger and monitor Azure Image Builder template runs.'
+    type: 'CustomRole'
+    permissions: [
+      {
+        actions: [
+          'Microsoft.VirtualMachineImages/imageTemplates/read'
+          'Microsoft.VirtualMachineImages/imageTemplates/run/action'
+        ]
+        notActions: []
+        dataActions: []
+        notDataActions: []
+      }
+    ]
+    assignableScopes: [resourceGroup().id]
+  }
+}
+
 // ── Role assignments ──────────────────────────────────────────────────────────
 
-var contributorRoleId = 'b24988ac-6180-42a0-ab88-20f7382dd24c'
-
-resource aibContributorRa 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(resourceGroup().id, 'uami-${namePrefix}-aib', contributorRoleId)
+resource aibRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(resourceGroup().id, 'uami-${namePrefix}-aib', aibCustomRole.id)
   properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', contributorRoleId)
+    roleDefinitionId: aibCustomRole.id
     principalId: identity.outputs.aibIdentityPrincipalId
     principalType: 'ServicePrincipal'
   }
 }
 
-resource laContributorRa 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(resourceGroup().id, 'uami-${namePrefix}-la', contributorRoleId)
+resource laRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(resourceGroup().id, 'uami-${namePrefix}-la', laCustomRole.id)
   properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', contributorRoleId)
+    roleDefinitionId: laCustomRole.id
     principalId: identity.outputs.logicAppIdentityPrincipalId
     principalType: 'ServicePrincipal'
   }
@@ -181,7 +228,7 @@ module imageTemplates 'modules/imageTemplate.bicep' = [for config in enabledImag
     replicationRegions: additionalReplicationRegions
     tags: tags
   }
-  dependsOn: [aibContributorRa, storage]
+  dependsOn: [aibRoleAssignment, storage]
 }]
 
 var enabledTemplateNames = [for config in enabledImageConfigs: 'aib-${namePrefix}-${config.name}']
@@ -201,7 +248,7 @@ module logicApp '../shared/modules/logicapp.bicep' = {
     resourceGroupName: resourceGroup().name
     tags: tags
   }
-  dependsOn: [imageTemplates, laContributorRa]
+  dependsOn: [imageTemplates, laRoleAssignment]
 }
 
 // ── Optional: private script storage ─────────────────────────────────────────

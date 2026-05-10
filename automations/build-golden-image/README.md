@@ -67,8 +67,10 @@ graph TD
 
 | Resource | Name pattern | Purpose |
 |---|---|---|
-| User-assigned MI | `uami-{prefix}-aib` | AIB identity — Contributor on RG |
-| User-assigned MI | `uami-{prefix}-la` | Logic App identity — Contributor on RG |
+| User-assigned MI | `uami-{prefix}-aib` | AIB identity — custom role: publish to Compute Gallery |
+| User-assigned MI | `uami-{prefix}-la` | Logic App identity — custom role: trigger and read AIB templates |
+| Custom role | `AIB Image Publisher — {prefix}` | Least-privilege: `galleries/*`, `images/*` read/write |
+| Custom role | `AIB Build Trigger — {prefix}` | Least-privilege: `imageTemplates/read` + `run/action` |
 | Azure Compute Gallery | `gal_{prefix}` | Stores and versions all golden images |
 | Image definition (×n) | `imgdef-{prefix}-{os}` | One definition per enabled OS type |
 | AIB Image Template (×n) | `aib-{prefix}-{os}` | Build config per enabled OS |
@@ -120,7 +122,7 @@ Before deploying, ensure:
 
 2. **Permissions** — the deploying identity needs at minimum:
    - `Contributor` on the target resource group
-   - `User Access Administrator` on the target resource group (to create role assignments for the UAMIs)
+   - `User Access Administrator` on the target resource group (to create role assignments and custom role definitions for the UAMIs)
 
 3. **Azure Container Instance (ACI) quota** — Azure Image Builder uses ACI containers internally during each build. The optional private script storage module also uses a deployment script container. Each AIB build consumes ~3.8 Standard CPU cores simultaneously.
 
@@ -359,7 +361,7 @@ build-golden-image/
 - **Trusted Launch** is enabled on all gallery image definitions (`SecurityType: TrustedLaunch`). VMs provisioned from these images support Secure Boot and vTPM. Existing image definitions without Trusted Launch cannot be updated in-place — delete and recreate them to change the security type.
 - **Print Spooler** is disabled by `security-hardening.ps1`. Re-enable it in the script if the image type requires printing.
 - **Logic App manual trigger URL** contains a SAS token valid for ~90 days. After expiry, retrieve a new URL from the portal (Logic App → Triggers → manual → Get URL) or redeploy.
-- **Role assignments** use `Contributor` on the resource group. For production environments, scope these down to custom roles with least privilege.
+- **Role assignments** use two least-privilege custom roles scoped to the resource group: `AIB Image Publisher` (gallery write + image read/write/delete) and `AIB Build Trigger` (imageTemplates read + run). Neither has Contributor-level access.
 - **Build VM size** is `Standard_D4s_v3`. Ensure vCPU quota is available. Change in `modules/imageTemplate.bicep` if needed.
 - **RHEL PAYG** includes the Red Hat license cost in the VM billing during the ~60-90 minute build window. Negligible cost but expected.
 - **Same resource group for Windows + Linux** with the same `namePrefix` will share the gallery, identities, and Logic App — this is by design for the unified deployment. Use different resource groups or name prefixes if you need independent pipelines.

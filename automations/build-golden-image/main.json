@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.43.8.12551",
-      "templateHash": "12117144543791121287"
+      "templateHash": "14947420982954392716"
     }
   },
   "parameters": {
@@ -194,7 +194,6 @@
         "input": "[format('aib-{0}-{1}', parameters('namePrefix'), variables('enabledLinuxConfigs')[copyIndex('enabledLinuxTemplateNames')].name)]"
       }
     ],
-    "contributorRoleId": "b24988ac-6180-42a0-ab88-20f7382dd24c",
     "windowsImageConfigs": [
       {
         "enabled": "[parameters('enableWindowsServer2022')]",
@@ -269,29 +268,84 @@
   },
   "resources": [
     {
+      "type": "Microsoft.Authorization/roleDefinitions",
+      "apiVersion": "2022-04-01",
+      "name": "[guid(resourceGroup().id, parameters('namePrefix'), 'aib-image-publisher')]",
+      "properties": {
+        "roleName": "[format('AIB Image Publisher — {0}', parameters('namePrefix'))]",
+        "description": "Minimum permissions for Azure Image Builder to publish images to the Compute Gallery.",
+        "type": "CustomRole",
+        "permissions": [
+          {
+            "actions": [
+              "Microsoft.Compute/galleries/read",
+              "Microsoft.Compute/galleries/images/read",
+              "Microsoft.Compute/galleries/images/versions/read",
+              "Microsoft.Compute/galleries/images/versions/write",
+              "Microsoft.Compute/images/write",
+              "Microsoft.Compute/images/read",
+              "Microsoft.Compute/images/delete"
+            ],
+            "notActions": [],
+            "dataActions": [],
+            "notDataActions": []
+          }
+        ],
+        "assignableScopes": [
+          "[resourceGroup().id]"
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Authorization/roleDefinitions",
+      "apiVersion": "2022-04-01",
+      "name": "[guid(resourceGroup().id, parameters('namePrefix'), 'aib-build-trigger')]",
+      "properties": {
+        "roleName": "[format('AIB Build Trigger — {0}', parameters('namePrefix'))]",
+        "description": "Minimum permissions for the Logic App to trigger and monitor Azure Image Builder template runs.",
+        "type": "CustomRole",
+        "permissions": [
+          {
+            "actions": [
+              "Microsoft.VirtualMachineImages/imageTemplates/read",
+              "Microsoft.VirtualMachineImages/imageTemplates/run/action"
+            ],
+            "notActions": [],
+            "dataActions": [],
+            "notDataActions": []
+          }
+        ],
+        "assignableScopes": [
+          "[resourceGroup().id]"
+        ]
+      }
+    },
+    {
       "type": "Microsoft.Authorization/roleAssignments",
       "apiVersion": "2022-04-01",
-      "name": "[guid(resourceGroup().id, format('uami-{0}-aib', parameters('namePrefix')), variables('contributorRoleId'))]",
+      "name": "[guid(resourceGroup().id, format('uami-{0}-aib', parameters('namePrefix')), resourceId('Microsoft.Authorization/roleDefinitions', guid(resourceGroup().id, parameters('namePrefix'), 'aib-image-publisher')))]",
       "properties": {
-        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('contributorRoleId'))]",
+        "roleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', guid(resourceGroup().id, parameters('namePrefix'), 'aib-image-publisher'))]",
         "principalId": "[reference(resourceId('Microsoft.Resources/deployments', 'identity'), '2025-04-01').outputs.aibIdentityPrincipalId.value]",
         "principalType": "ServicePrincipal"
       },
       "dependsOn": [
+        "[resourceId('Microsoft.Authorization/roleDefinitions', guid(resourceGroup().id, parameters('namePrefix'), 'aib-image-publisher'))]",
         "[resourceId('Microsoft.Resources/deployments', 'identity')]"
       ]
     },
     {
       "type": "Microsoft.Authorization/roleAssignments",
       "apiVersion": "2022-04-01",
-      "name": "[guid(resourceGroup().id, format('uami-{0}-la', parameters('namePrefix')), variables('contributorRoleId'))]",
+      "name": "[guid(resourceGroup().id, format('uami-{0}-la', parameters('namePrefix')), resourceId('Microsoft.Authorization/roleDefinitions', guid(resourceGroup().id, parameters('namePrefix'), 'aib-build-trigger')))]",
       "properties": {
-        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('contributorRoleId'))]",
+        "roleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', guid(resourceGroup().id, parameters('namePrefix'), 'aib-build-trigger'))]",
         "principalId": "[reference(resourceId('Microsoft.Resources/deployments', 'identity'), '2025-04-01').outputs.logicAppIdentityPrincipalId.value]",
         "principalType": "ServicePrincipal"
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Resources/deployments', 'identity')]"
+        "[resourceId('Microsoft.Resources/deployments', 'identity')]",
+        "[resourceId('Microsoft.Authorization/roleDefinitions', guid(resourceGroup().id, parameters('namePrefix'), 'aib-build-trigger'))]"
       ]
     },
     {
@@ -1077,7 +1131,7 @@
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Authorization/roleAssignments', guid(resourceGroup().id, format('uami-{0}-aib', parameters('namePrefix')), variables('contributorRoleId')))]",
+        "[resourceId('Microsoft.Authorization/roleAssignments', guid(resourceGroup().id, format('uami-{0}-aib', parameters('namePrefix')), resourceId('Microsoft.Authorization/roleDefinitions', guid(resourceGroup().id, parameters('namePrefix'), 'aib-image-publisher'))))]",
         "[resourceId('Microsoft.Resources/deployments', 'gallery')]",
         "[resourceId('Microsoft.Resources/deployments', 'identity')]",
         "[resourceId('Microsoft.Resources/deployments', 'storage')]"
@@ -1298,7 +1352,7 @@
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Authorization/roleAssignments', guid(resourceGroup().id, format('uami-{0}-aib', parameters('namePrefix')), variables('contributorRoleId')))]",
+        "[resourceId('Microsoft.Authorization/roleAssignments', guid(resourceGroup().id, format('uami-{0}-aib', parameters('namePrefix')), resourceId('Microsoft.Authorization/roleDefinitions', guid(resourceGroup().id, parameters('namePrefix'), 'aib-image-publisher'))))]",
         "[resourceId('Microsoft.Resources/deployments', 'gallery')]",
         "[resourceId('Microsoft.Resources/deployments', 'identity')]",
         "[resourceId('Microsoft.Resources/deployments', 'storage')]"
@@ -1521,7 +1575,7 @@
       },
       "dependsOn": [
         "[resourceId('Microsoft.Resources/deployments', 'identity')]",
-        "[resourceId('Microsoft.Authorization/roleAssignments', guid(resourceGroup().id, format('uami-{0}-la', parameters('namePrefix')), variables('contributorRoleId')))]",
+        "[resourceId('Microsoft.Authorization/roleAssignments', guid(resourceGroup().id, format('uami-{0}-la', parameters('namePrefix')), resourceId('Microsoft.Authorization/roleDefinitions', guid(resourceGroup().id, parameters('namePrefix'), 'aib-build-trigger'))))]",
         "linuxImageTemplates",
         "windowsImageTemplates"
       ]
