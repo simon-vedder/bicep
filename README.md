@@ -1,5 +1,9 @@
 # 💠 Azure Bicep Templates Collection
 
+![Bicep](https://img.shields.io/badge/Bicep-Infrastructure_as_Code-00A4EF?logo=microsoftazure&logoColor=white)
+![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)
+![Last commit](https://img.shields.io/github/last-commit/simon-vedder/bicep)
+
 This repository contains a collection of Azure Bicep templates and related automation scripts that I use across various cloud projects. These templates aim to simplify and standardize infrastructure deployments on Azure with the declarative and modular Bicep language.
 
 > 🛠️ Some templates are production-ready, while others serve as references or experiments for learning and prototyping.
