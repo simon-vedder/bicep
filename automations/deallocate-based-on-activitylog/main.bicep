@@ -15,22 +15,25 @@
     LogicApp, Automation, AlertRule, ActionGroup
 
 .MINROLE
-    Contributor
+    Contributor on the resource group, User Access Administrator or Owner on the subscription (one role assignment lands there)
 
 .PERMISSIONS
-    tbd
+    The Logic App's identity gets Desktop Virtualization Power On Off Contributor at the subscription:
+    read, start, power off and deallocate virtual machines, nothing else.
 
 .AUTHOR
     Simon Vedder
 
 .VERSION
-    1.0
+    1.1
 
 .CHANGELOG
+    1.1 - API connection set up for managed identity; alert rule filters on properties.cause; action
+          group calls the trigger's URL; identity narrowed to the power-on/off role. Verified end to end.
     1.0 - Initial release
 
 .LASTUPDATE
-    2025-06-02
+    2026-09-12
 
 .NOTES
 
@@ -52,6 +55,9 @@ resource apiConnection 'Microsoft.Web/connections@2016-06-01' = {
   location: resourceGroup().location
   properties: {
     displayName: 'azurerm_connection'
+    // Without this the connection only offers OAuth, and the workflow's managed-identity
+    // authentication is rejected at deployment time. The ARM and Terraform variants set it.
+    parameterValueType: 'Alternative'
     api: {
       id: '${subscription().id}/providers/Microsoft.Web/locations/${resourceGroup().location}/managedApis/azurevm'
     }
@@ -79,7 +85,9 @@ resource actionGroup 'Microsoft.Insights/actionGroups@2023-01-01' = {
     webhookReceivers: [
       {
         name: 'TriggerLogicApp'
-        serviceUri: logicApp.listCallbackUrl().value
+        // The workflow's own listCallbackUrl is a management URL, and a POST to it starts
+        // nothing. The action group has to call the HTTP trigger's invoke URL.
+        serviceUri: listCallbackUrl('${logicApp.id}/triggers/When_a_HTTP_request_is_received', '2019-05-01').value
         useCommonAlertSchema: true
       }
     ]
@@ -105,7 +113,9 @@ resource activityLogAlert 'Microsoft.Insights/activityLogAlerts@2020-10-01' = {
           equals: 'Microsoft.Compute/virtualMachines'
         }
         {
-          field: 'resourceHealthStatus'
+          // The event carries the reason in properties.cause. 'resourceHealthStatus' is not a
+          // field the Activity Log knows, so a rule on it never fires.
+          field: 'properties.cause'
           equals: 'UserInitiated'
         }
       ]
